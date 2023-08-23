@@ -131,10 +131,14 @@ class user_info
 
     public function get_historico_prom($historico) {
         $sum = 0;
+        $prom = 0;
         foreach ($historico as $coursesinfo) {
             $sum += $coursesinfo['grade'];
         }
-        $prom = $sum / count($historico);
+        if(isset($historico)){
+            $prom = $sum / count($historico);
+        }
+        
 
         return $prom;
     }
