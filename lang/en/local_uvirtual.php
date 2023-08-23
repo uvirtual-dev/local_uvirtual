@@ -34,3 +34,14 @@ $string['messageprovider:welcomemessage'] = '
 $string['messageprovider:welcomemessage:subject'] = 'Virtual campus account';
 $string['successupdate'] = 'User has been succesfully updated';
 $string['mycourses'] = 'My courses';
+
+$string['assign'] = 'Tarea';
+$string['quiz'] = 'Cuestionario';
+$string['forum'] = 'Foro';
+$string['approved'] = 'Aprovado';
+$string['notapproved'] = 'No aprovado';
+$string['subm'] = 'Enviado';
+$string['notsubm'] = 'No enviado';
+$string['viewed'] = 'Visto';
+$string['notviewed'] = 'Por ver';
+
