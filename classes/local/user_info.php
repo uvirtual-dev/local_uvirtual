@@ -59,11 +59,11 @@ class user_info
         return $userhistorico;
     }
 
-    public function get_mods($gradable = false, $pretty = false) {
+    public function get_mods($gradable = false, $pretty = false, $active = false, $courseid = false) {
         $activities = [];
-        $courses = enrol_get_all_users_courses($this->user->id,true);
+        $courses = !empty($courseid) ? [get_course($courseid)] : enrol_get_all_users_courses($this->user->id,true);
         foreach ($courses as $course) {
-            $coursedata = \course_info::get_course_activities($course->id);
+            $coursedata = \course_info::get_course_activities($course->id, $active);
 
             if (empty($activities)) {
                 $activities = $coursedata['activities'];
@@ -117,8 +117,9 @@ class user_info
             $activitiesinfo[] = [
                 'id' => $atv['id'],
                 'name' => $atv['name'],
-                'type' => $pretty ? get_string($atv['type'], 'local_uvirtual') : $atv['type'] ,
+                'type' => $pretty ? get_string($atv['type'], 'local_uvirtual') : $atv['type'],
                 'expected' => $pretty ? date('d M Y', $atv['expected']) : $atv['expected'],
+                'startdate' => $pretty ? date('d M Y', $atv['startdate']) : $atv['startdate'],
                 'grade' => $gradeuser,
                 'objetive' => $maxgrade,
                 'url' => $atv['url'],
@@ -158,5 +159,19 @@ class user_info
             $finishedcourses[] = $current;
         }
         return $finishedcourses;
+    }
+
+    public function get_forums_user_unread_info($courseid, $active = false) {
+        $unread = 0;
+        $currenttime = time();
+        $modsinfo = get_fast_modinfo($courseid);
+        foreach ($modsinfo->cms as $cm) {
+            $dates = \course_info::get_activity_dates($cm);
+            if ($cm->modname != 'forum' || $active && ($currenttime > $dates->enddate)) {
+                continue;
+            }
+            $unread +=  forum_tp_count_forum_unread_posts($cm, $cm->get_course());
+        }
+        return $unread;
     }
 }
