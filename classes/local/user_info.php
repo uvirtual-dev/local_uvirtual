@@ -167,7 +167,7 @@ class user_info
         $modsinfo = get_fast_modinfo($courseid);
         foreach ($modsinfo->cms as $cm) {
             $dates = \course_info::get_activity_dates($cm);
-            if ($cm->modname != 'forum' || $active && ($currenttime < $dates->enddate)) {
+            if ($cm->modname != 'forum' || $active && ($currenttime > $dates->enddate)) {
                 continue;
             }
             $unread +=  forum_tp_count_forum_unread_posts($cm, $cm->get_course());
