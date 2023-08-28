@@ -119,7 +119,7 @@ class user_info
                 'name' => $atv['name'],
                 'type' => $pretty ? get_string($atv['type'], 'local_uvirtual') : $atv['type'],
                 'expected' => $pretty ? date('d M Y', $atv['expected']) : $atv['expected'],
-                'startdate' => $atv['startdate'],
+                'startdate' => $pretty ? date('d M Y', $atv['startdate']) : $atv['startdate'],
                 'grade' => $gradeuser,
                 'objetive' => $maxgrade,
                 'url' => $atv['url'],
