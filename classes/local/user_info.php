@@ -59,11 +59,11 @@ class user_info
         return $userhistorico;
     }
 
-    public function get_mods($gradable = false, $pretty = false) {
+    public function get_mods($gradable = false, $pretty = false, $active = false, $courseid = false) {
         $activities = [];
-        $courses = enrol_get_all_users_courses($this->user->id,true);
+        $courses = !empty($courseid) ? [get_course($courseid)] : enrol_get_all_users_courses($this->user->id,true);
         foreach ($courses as $course) {
-            $coursedata = \course_info::get_course_activities($course->id);
+            $coursedata = \course_info::get_course_activities($course->id, $active);
 
             if (empty($activities)) {
                 $activities = $coursedata['activities'];
@@ -117,8 +117,9 @@ class user_info
             $activitiesinfo[] = [
                 'id' => $atv['id'],
                 'name' => $atv['name'],
-                'type' => $pretty ? get_string($atv['type'], 'local_uvirtual') : $atv['type'] ,
+                'type' => $pretty ? get_string($atv['type'], 'local_uvirtual') : $atv['type'],
                 'expected' => $pretty ? date('d M Y', $atv['expected']) : $atv['expected'],
+                'startdate' => $atv['startdate'],
                 'grade' => $gradeuser,
                 'objetive' => $maxgrade,
                 'url' => $atv['url'],
