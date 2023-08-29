@@ -76,16 +76,17 @@ class user_info
         foreach ($activities as $index => $activity) {
             $gradeitem = \grade_get_grade_items_for_activity((object)$activity, true);
             if (!empty($gradeitem) && $gradable) {
-                $gradableatvs[] = $activity;
+                $filteredactivities[] = $activity;
             }
             if (empty($gradeitem) && !$gradable) {
-                $gradableatvs[] = $activity;
+                $filteredactivities[] = $activity;
             }
         }
         $activitiesinfo = [];
-        foreach ($gradableatvs as $atv) {
+        foreach ($filteredactivities as $atv) {
 
-            $gradeitem = \grade_user_management::get_user_mod_grade($this->user->id, $atv['instance'], $atv['type'], $atv['courseid']);
+            $gradeitem = $gradable ?
+                \grade_user_management::get_user_mod_grade($this->user->id, $atv['instance'], $atv['type'], $atv['courseid']) : false;
 
             $gradeplit =  !empty($gradeitem->str_long_grade) ? explode('/', $gradeitem->str_long_grade) : [0,0];
             $maxgrade =  number_format((float)$gradeplit[1], 2, '.', '');
