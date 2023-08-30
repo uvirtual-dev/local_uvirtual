@@ -23,10 +23,6 @@ require_once($CFG->dirroot . '/grade/querylib.php');
 require_once($CFG->dirroot . '/lib/grade/grade_item.php');
 require_once($CFG->dirroot . '/lib/grade/constants.php');
 
-
-
-use core_user;
-
 class user_info
 {
     protected $user;
@@ -72,7 +68,7 @@ class user_info
             }
         }
 
-        $gradableatvs = [];
+        $filteredactivities = [];
         foreach ($activities as $index => $activity) {
             $gradeitem = \grade_get_grade_items_for_activity((object)$activity, true);
             if (!empty($gradeitem) && $gradable) {
@@ -84,13 +80,12 @@ class user_info
         }
         $activitiesinfo = [];
         foreach ($filteredactivities as $atv) {
-
             $gradeitem = $gradable ?
                 \grade_user_management::get_user_mod_grade($this->user->id, $atv['instance'], $atv['type'], $atv['courseid']) : false;
-
-            $gradeplit =  !empty($gradeitem->str_long_grade) ? explode('/', $gradeitem->str_long_grade) : [0,0];
+            $split = !empty($gradeitem->str_long_grade) ? explode('/', $gradeitem->str_long_grade) : [0,0];
+            $gradeplit =  count($split) > 1 ? $split: [0,0];
             $maxgrade =  number_format((float)$gradeplit[1], 2, '.', '');
-            $gradeuser = number_format((float)$gradeitem->grade, 2, '.', '');
+            $gradeuser = number_format((float)$gradeplit[0], 2, '.', '');
 
             $status = '';
             if ($gradable) {
