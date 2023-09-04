@@ -170,4 +170,32 @@ class user_info
         }
         return $unread;
     }
+
+    public function get_hsforums_user_unread_info($courseid, $active = false, $idnumber = false) {
+        $unread = 0;
+        $currenttime = time();
+        $modsinfo = get_fast_modinfo($courseid);
+        foreach ($modsinfo->cms as $cm) {
+            $dates = \course_info::get_activity_dates($cm);
+            if ($cm->modname != 'hsforum' || $active && ($currenttime > $dates->enddate) || !empty($idnumber) != $cm->idnumber) {
+                continue;
+            }
+            $unread +=  hsuforum_count_forum_unread_posts($cm, $cm->get_course());
+        }
+        return $unread;
+    }
+
+    public function get_dialogue_unread_info($courseid, $active = false, $idnumber = false) {
+        $unread = 0;
+        $currenttime = time();
+        $modsinfo = get_fast_modinfo($courseid);
+        foreach ($modsinfo->cms as $cm) {
+            $dates = \course_info::get_activity_dates($cm);
+            if ($cm->modname != 'dialogue' || $active && ($currenttime > $dates->enddate) || !empty($idnumber) != $cm->idnumber) {
+                continue;
+            }
+            $unread +=  dialogue_cm_unread_total(new \mod_dialogue\dialogue($cm));
+        }
+        return $unread;
+    }
 }
