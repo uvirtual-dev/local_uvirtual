@@ -36,6 +36,7 @@ use course_info;
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->dirroot . "/blocks/grade_overview/classes/course_info.php");
+require_once($CFG->dirroot . "/course/format/lib.php");
 
 
 class get_course_info extends external_api {
@@ -76,6 +77,19 @@ class get_course_info extends external_api {
                  WHERE id = $courseid";
 
         $courseinfo = $DB->get_record_sql($sql);
+        $ahora = time();
+        if ($ahora > $courseinfo->startdate && $ahora < $courseinfo->enddate) {
+            $format = \course_get_format($courseid);
+            if ($format->get_format() == 'weeks') {
+                $sections = $format->get_sections();
+                foreach ($sections as $section) {
+                    $date = $format->get_section_dates($section);
+                    if ($ahora > $date->start && $ahora < $date->end) {
+                        $courseinfo->currentWeek = $section->section;
+                    }
+                }
+            }
+        }
 
         $studentsfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, ul.timeaccess as lastAccess, gg.finalgrade as grade';
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
