@@ -148,11 +148,11 @@ class get_course_categories extends external_api {
         return $courses;
     }
 
-    public static function get_subcategories($category, $allCategories, $typecourse, $userId) {
+    public static function get_subcategories($category, $allCategories, $typecourse, $userId, $active = false, $roles = []) {
         $subCategories = array();
         foreach ($allCategories as $cat) {
             if ($cat->parent == $category->id) {
-                $subCategory = self::transform_category($cat, $allCategories, $typecourse, $userId);
+                $subCategory = self::transform_category($cat, $allCategories, $typecourse, $userId, $active, $roles);
                 if (!empty($subCategory)) {
                     $subCategories[] = $subCategory;
                 }
@@ -181,7 +181,7 @@ class get_course_categories extends external_api {
             });
         }
 
-        $subCategories = self::get_subcategories($category, $allCategories, $typecourse, $userId);
+        $subCategories = self::get_subcategories($category, $allCategories, $typecourse, $userId, $active, $roles);
 
         $notempty = !empty($subCategories) || !empty($courses);
         $category_info = [
