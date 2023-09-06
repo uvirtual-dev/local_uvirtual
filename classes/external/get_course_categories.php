@@ -44,8 +44,11 @@ class get_course_categories extends external_api {
     public static function execute_parameters() {
         return new external_function_parameters(
             [
-                'typeCourse' => new external_value(PARAM_TEXT, 'Course type', VALUE_DEFAULT),
-                'studentId' => new external_value(PARAM_INT, 'Student id', VALUE_DEFAULT)
+                'typeCourse' => new external_value(PARAM_TEXT, 'Course type', VALUE_DEFAULT, ''),
+                'userId' => new external_value(PARAM_INT, 'Student id', VALUE_DEFAULT, 0),
+                'activeCourse' =>  new external_value(PARAM_BOOL, 'Course is active', VALUE_DEFAULT, false),
+                'roleIds' =>  new external_multiple_structure(
+                    new external_value(PARAM_TEXT, 'Role id', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, []),
             ]
         );
     }
@@ -59,25 +62,33 @@ class get_course_categories extends external_api {
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($coursetype, $studentid) {
-
+    public static function execute($coursetype, $userid, $activecourse, $roleids) {
         $params = [
             'typeCourse' => $coursetype,
-            'studentId'  => $studentid
+            'userId'  => $userid,
+            'activeCourse'  => $activecourse,
+            'roleIds'  => $roleids
         ];
-        $params = self::validate_parameters(self::execute_parameters(), $params);
+        self::validate_parameters(self::execute_parameters(), $params);
 
         $categories = \core_course_category::get_all();
 
         $rootCategories = [];
         foreach ($categories as $category) {
             if ($category->parent == 0) {
-                $categorydata = self::transform_category($category, $categories, $params['typeCourse'], $params['studentId']);
+                $categorydata = self::transform_category($category, $categories, $coursetype, $userid, $activecourse, $roleids);
                 if (!empty($categorydata)) {
                     $rootCategories[] = $categorydata;
                 }
             }
         }
+        usort($rootCategories, function ($a, $b)
+        {
+            if ($a == $b) {
+                return 0;
+            }
+            return ($a > $b) ? -1 : 1;
+        });
 
         return json_encode(array_values($rootCategories));
     }
@@ -92,7 +103,7 @@ class get_course_categories extends external_api {
         return new external_value(PARAM_TEXT, 'JSON object', VALUE_OPTIONAL);
     }
 
-    public static function get_courses_in_category($category, $recursive, $type) {
+    public static function get_courses_in_category($category, $recursive, $type, $active = false) {
         global $DB;
         $courses = array();
         $customfield = $DB->get_record('customfield_field', ['shortname' => 'typecourse']);
@@ -109,6 +120,15 @@ class get_course_categories extends external_api {
         foreach ($category->get_courses(['recursive' => $recursive]) as $course) {
             $add_course = false;
             $datas = $handler->get_instance_data($course->id);
+            if ($active) {
+                $now = time();
+                $timediference = $course->startdate - $now;
+                $currentactive = $now > $course->startdate && $now < $course->enddate;
+                $futureactive = ($timediference > 0) && ($timediference < DAYSECS*90);
+                if (!($currentactive || $futureactive)) {
+                    continue;
+                }
+            }
             foreach ($datas as $data) {
                 if ($data->get_form_element_name() == 'customfield_typecourse') {
                     if (!empty($data->get_value()) && ((int)$data->get_value() == (int)$typeindetifier)) {
@@ -141,22 +161,23 @@ class get_course_categories extends external_api {
         return $subCategories;
     }
 
-    public static function transform_category($category, $allCategories, $typecourse, $userId) {
+    public static function transform_category($category, $allCategories, $typecourse, $userId, $active = false, $roles = []) {
         // Get courses of current category.
-        $courses = self::get_courses_in_category($category, false, $typecourse);
+        $courses = self::get_courses_in_category($category, false, $typecourse, $active);
         if (!empty($userId)) {
-
-            // Get all courses of category and sub-categories
-            $recursivecourses = self::get_courses_in_category($category, true, $typecourse);
-
-            // This filters if the user is enroled on any course.
-            $enrolledCourses = array_filter($recursivecourses, function ($course) use ($userId) {
-                return is_enrolled(\context_course::instance($course['id']), $userId);
-            });
-
-            // This filters the courses on which the user is enrolled on.
-            $courses = array_filter($courses, function ($course) use ($userId) {
-                return is_enrolled(\context_course::instance($course['id']), $userId);
+            // This filters the courses on which the user is enrolled on and the role,
+            $courses = array_filter($courses, function ($course) use ($userId, $roles) {
+                $isenrolled =  is_enrolled(\context_course::instance($course['id']), $userId);
+                if ($isenrolled && !empty($roles)) {
+                    $userroles = enrol_get_course_users_roles($course['id'])[$userId];
+                    foreach ($roles as $role) {
+                        if (isset($userroles[$role])) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                return $isenrolled;
             });
         }
 
@@ -167,7 +188,8 @@ class get_course_categories extends external_api {
             'id' => $category->id,
             'name' => $category->name,
             'courses' => array_values($courses),
-            'subCategories' => array_values($subCategories)
+            'subCategories' => array_values($subCategories),
+            'time' => $category->timemodified
         ];
 
         return !empty($notempty) ? $category_info : [];

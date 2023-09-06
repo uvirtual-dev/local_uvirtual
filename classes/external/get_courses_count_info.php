@@ -31,15 +31,13 @@ use external_function_parameters;
 use external_multiple_structure;
 use external_single_structure;
 use external_value;
-use course_info;
 
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
-require_once($CFG->dirroot . "/blocks/grade_overview/classes/course_info.php");
 require_once($CFG->dirroot . "/course/format/lib.php");
 
 
-class get_course_info extends external_api {
+class get_courses_count_info extends external_api {
 
     /**
      * Returns description of method parameters
@@ -50,7 +48,6 @@ class get_course_info extends external_api {
     public static function execute_parameters() {
         return new external_function_parameters(
             [
-                'courseId' => new external_value(PARAM_INT, 'Course id', VALUE_REQUIRED, ''),
             ]
         );
     }
@@ -64,40 +61,44 @@ class get_course_info extends external_api {
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($courseid) {
+    public static function execute() {
         global $DB;
-        $params = [
-            'courseId'  => $courseid,
-        ];
-        $params = self::validate_parameters(self::execute_parameters(), $params);
-        $courseid = $params['courseId'];
 
         $sql = "SELECT id, fullname as name, shortname as shortName, startdate as startDate, enddate as endDate
                   FROM {course}
-                 WHERE id = $courseid";
+                 WHERE  (UNIX_TIMESTAMP(NOW()) > startdate 
+                   AND  UNIX_TIMESTAMP(NOW()) < enddate)
+                    OR  ((startdate - UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL +90 DAY))) > 0
+                   AND  UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL +90 DAY)) > startdate)";
 
-        $courseinfo = $DB->get_record_sql($sql);
-        $ahora = time();
-        if ($ahora > $courseinfo->startdate && $ahora < $courseinfo->enddate) {
-            $format = \course_get_format($courseid);
-            if ($format->get_format() == 'weeks') {
-                $sections = $format->get_sections();
-                foreach ($sections as $section) {
-                    $date = $format->get_section_dates($section);
-                    if ($ahora > $date->start && $ahora < $date->end) {
-                        $courseinfo->currentWeek = $section->section;
+        $activecourses = $DB->get_records_sql($sql);
+
+        // Get Course type options.
+        $customfield = $DB->get_record('customfield_field', ['shortname' => 'typecourse']);
+        $configdata = json_decode($customfield->configdata, true);
+        $options = explode(PHP_EOL, $configdata['options']);
+        $types = [];
+        foreach ($options as $key => $option) {
+            $types[$key]['name'] = str_replace("\r", '', $option);
+            $types[$key]['numCourses'] = 0;
+
+        }
+
+        $handler = \core_customfield\handler::get_handler('core_course', 'course');
+        foreach ($activecourses as $course) {
+            $datas = $handler->get_instance_data($course->id);
+            foreach ($datas as $data) {
+                if ($data->get_form_element_name() == 'customfield_typecourse') {
+                    if (!empty($data->get_value())) {
+                        $types[$data->get_value() - 1]['numCourses']++;
                     }
                 }
             }
         }
 
-        $studentsfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, ul.timeaccess as lastAccess, gg.finalgrade as grade';
-        $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
 
-        $courseinfo->students = array_values(course_info::get_course_students($courseid, 0 ,$studentsfields));
-        $courseinfo->teachers = array_values(course_info::get_course_tutor($courseid, $teachersfields));
 
-        return json_encode($courseinfo);
+        return json_encode(['courses' => $types]);
     }
 
     /**

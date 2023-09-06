@@ -76,8 +76,22 @@ $functions = [
         'description' => '',
         'type' => 'read'
     ],
+    'local_uvirtual_get_filtered_courses_info' => [
+        'classname' => 'local_uvirtual\external\get_filtered_courses_info',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => '',
+        'type' => 'read'
+    ],
     'local_uvirtual_get_user_course_info' => [
         'classname' => 'local_uvirtual\external\get_user_course_info',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => '',
+        'type' => 'read'
+    ],
+    'local_uvirtual_get_courses_count_info' => [
+        'classname' => 'local_uvirtual\external\get_courses_count_info',
         'methodname' => 'execute',
         'ajax' => true,
         'description' => '',
@@ -97,7 +111,9 @@ $services = [
             'local_uvirtual_get_course_categories',
             'local_uvirtual_get_user_info',
             'local_uvirtual_get_course_info',
-            'local_uvirtual_get_user_course_info'
+            'local_uvirtual_get_filtered_courses_info',
+            'local_uvirtual_get_user_course_info',
+            'local_uvirtual_get_courses_count_info'
         ],
         'restrictedusers' => 0,
         'enabled' => 1,

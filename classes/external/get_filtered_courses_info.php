@@ -39,7 +39,7 @@ require_once($CFG->dirroot . "/blocks/grade_overview/classes/course_info.php");
 require_once($CFG->dirroot . "/course/format/lib.php");
 
 
-class get_course_info extends external_api {
+class get_filtered_courses_info extends external_api {
 
     /**
      * Returns description of method parameters
@@ -50,7 +50,7 @@ class get_course_info extends external_api {
     public static function execute_parameters() {
         return new external_function_parameters(
             [
-                'courseId' => new external_value(PARAM_INT, 'Course id', VALUE_REQUIRED, ''),
+                'filter' => new external_value(PARAM_TEXT, 'Course id', VALUE_REQUIRED, ''),
             ]
         );
     }
@@ -64,40 +64,27 @@ class get_course_info extends external_api {
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($courseid) {
+    public static function execute($filter) {
         global $DB;
         $params = [
-            'courseId'  => $courseid,
+            'filter'  => $filter,
         ];
         $params = self::validate_parameters(self::execute_parameters(), $params);
-        $courseid = $params['courseId'];
+        $filter = $params['filter'];
 
         $sql = "SELECT id, fullname as name, shortname as shortName, startdate as startDate, enddate as endDate
                   FROM {course}
-                 WHERE id = $courseid";
+                 WHERE fullname LIKE '%$filter%'
+                    OR shortname LIKE '%$filter%'";
 
-        $courseinfo = $DB->get_record_sql($sql);
-        $ahora = time();
-        if ($ahora > $courseinfo->startdate && $ahora < $courseinfo->enddate) {
-            $format = \course_get_format($courseid);
-            if ($format->get_format() == 'weeks') {
-                $sections = $format->get_sections();
-                foreach ($sections as $section) {
-                    $date = $format->get_section_dates($section);
-                    if ($ahora > $date->start && $ahora < $date->end) {
-                        $courseinfo->currentWeek = $section->section;
-                    }
-                }
-            }
+        $coursesinfo = $DB->get_records_sql($sql);
+
+        $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
+        foreach ($coursesinfo as $courseinfo) {
+            $courseinfo->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields));
         }
 
-        $studentsfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, ul.timeaccess as lastAccess, gg.finalgrade as grade';
-        $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
-
-        $courseinfo->students = array_values(course_info::get_course_students($courseid, 0 ,$studentsfields));
-        $courseinfo->teachers = array_values(course_info::get_course_tutor($courseid, $teachersfields));
-
-        return json_encode($courseinfo);
+        return json_encode(['courses' => $coursesinfo]);
     }
 
     /**
