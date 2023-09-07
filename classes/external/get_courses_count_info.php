@@ -98,7 +98,7 @@ class get_courses_count_info extends external_api {
 
 
 
-        return json_encode(['courses' => $types]);
+        return json_encode($types);
     }
 
     /**
