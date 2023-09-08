@@ -84,7 +84,7 @@ class get_filtered_courses_info extends external_api {
             $courseinfo->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields));
         }
 
-        return json_encode($coursesinfo);
+        return json_encode(array_values($coursesinfo));
     }
 
     /**
