@@ -75,13 +75,15 @@ class get_filtered_courses_info extends external_api {
         $sql = "SELECT id, fullname as name, shortname as shortName, startdate as startDate, enddate as endDate
                   FROM {course}
                  WHERE fullname LIKE '%$filter%'
-                    OR shortname LIKE '%$filter%'";
+                    OR shortname LIKE '%$filter%'
+                 ORDER BY startdate DESC";
 
         $coursesinfo = $DB->get_records_sql($sql);
 
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
         foreach ($coursesinfo as $courseinfo) {
             $courseinfo->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields));
+            $coursesinfo->status = ($coursesinfo->startDate < time()) && ($coursesinfo->endDate > time());
         }
 
         return json_encode(array_values($coursesinfo));
