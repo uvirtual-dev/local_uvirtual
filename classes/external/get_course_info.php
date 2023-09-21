@@ -51,6 +51,10 @@ class get_course_info extends external_api {
         return new external_function_parameters(
             [
                 'courseId' => new external_value(PARAM_INT, 'Course id', VALUE_REQUIRED, ''),
+                'roleIdsStudents' =>  new external_multiple_structure(
+                    new external_value(PARAM_TEXT, 'Role ids students', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, []),
+                'roleIdsTeachers' =>  new external_multiple_structure(
+                    new external_value(PARAM_TEXT, 'Role ids teachers', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, [])
             ]
         );
     }
@@ -64,13 +68,17 @@ class get_course_info extends external_api {
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($courseid) {
+    public static function execute($courseid, $roleidsstudents, $roleidsteachers) {
         global $DB;
         $params = [
             'courseId'  => $courseid,
+            'roleIdsStudents' => $roleidsstudents,
+            'roleIdsTeachers' => $roleidsteachers
         ];
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $courseid = $params['courseId'];
+        $roleidsstudents = $params['roleIdsStudents'];
+        $roleidsteachers = $params['roleIdsTeachers'];
 
         $sql = "SELECT id, fullname as name, shortname as shortName, startdate as startDate, enddate as endDate
                   FROM {course}
@@ -94,8 +102,8 @@ class get_course_info extends external_api {
         $studentsfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, ul.timeaccess as lastAccess, gg.finalgrade as grade';
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
 
-        $courseinfo->students = array_values(course_info::get_course_students($courseid, 0 ,$studentsfields));
-        $courseinfo->teachers = array_values(course_info::get_course_tutor($courseid, $teachersfields));
+        $courseinfo->students = array_values(course_info::get_course_students($courseid, 0 ,$studentsfields, $roleidsstudents));
+        $courseinfo->teachers = array_values(course_info::get_course_tutor($courseid, $teachersfields, $roleidsteachers));
 
         return json_encode($courseinfo);
     }

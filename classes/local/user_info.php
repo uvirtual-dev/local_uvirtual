@@ -37,6 +37,9 @@ class user_info
     }
 
     public function get_user_historico() {
+        if (empty($this->user)) {
+            return [];
+        }
         $curl = new curl();
 
         $libraryws = get_config('block_grade_overview', 'historicows');
@@ -56,6 +59,9 @@ class user_info
     }
 
     public function get_mods($gradable = false, $pretty = false, $active = false, $courseid = false) {
+        if (empty($this->user)) {
+            return [];
+        }
         $activities = [];
         $courses = !empty($courseid) ? [get_course($courseid)] : enrol_get_all_users_courses($this->user->id,true);
         foreach ($courses as $course) {
@@ -127,6 +133,9 @@ class user_info
     }
 
     public function get_historico_prom($historico) {
+        if (empty($historico)) {
+            return 0;
+        }
         $sum = 0;
         $prom = 0;
         foreach ($historico as $coursesinfo) {
@@ -142,6 +151,9 @@ class user_info
 
     public function get_complete_courses() {
 
+        if (empty($this->user)) {
+            return [];
+        }
         $courses = enrol_get_all_users_courses($this->user->id,true, 'fullname, startdate, enddate, shortname');
         $finishedcourses = [];
         $number = 0;
