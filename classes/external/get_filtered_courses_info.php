@@ -51,6 +51,10 @@ class get_filtered_courses_info extends external_api {
         return new external_function_parameters(
             [
                 'filter' => new external_value(PARAM_TEXT, 'Course id', VALUE_REQUIRED, ''),
+                'roleIdsTutors' =>  new external_multiple_structure(
+                    new external_value(PARAM_TEXT, 'Role ids tutors', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, []),
+                'roleIdsOthers' =>  new external_multiple_structure(
+                    new external_value(PARAM_TEXT, 'Role ids others', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, [])
             ]
         );
     }
@@ -64,13 +68,17 @@ class get_filtered_courses_info extends external_api {
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($filter) {
+    public static function execute($filter, $roleidstutors, $roleidsothers) {
         global $DB;
         $params = [
             'filter'  => $filter,
+            'roleIdsTutors' => $roleidstutors,
+            'roleIdsOthers' => $roleidsothers
         ];
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $filter = $params['filter'];
+        $roleidstutors = $params['roleIdsTutors'];
+        $roleidsothers = $params['roleIdsOthers'];
 
         $sql = "SELECT id, fullname as name, shortname as shortName, startdate as startDate, enddate as endDate
                   FROM {course}
@@ -81,10 +89,14 @@ class get_filtered_courses_info extends external_api {
         $coursesinfo = $DB->get_records_sql($sql);
 
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
+        $othersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, r.shortname as rol';
+
         foreach ($coursesinfo as $courseinfo) {
-            $courseinfo->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields));
-            $coursesinfo->status = ($coursesinfo->startDate < time()) && ($coursesinfo->endDate > time());
+            $courseinfo->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields, $roleidstutors));
+            $courseinfo->others = array_values(course_info::get_course_tutor($courseinfo->id, $othersfields, $roleidsothers));
+            $courseinfo->status = ($coursesinfo->startDate < time()) && ($coursesinfo->endDate > time());
         }
+
 
         return json_encode(array_values($coursesinfo));
     }
