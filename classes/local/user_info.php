@@ -189,7 +189,7 @@ class user_info
         $modsinfo = get_fast_modinfo($courseid);
         foreach ($modsinfo->cms as $cm) {
             $dates = \course_info::get_activity_dates($cm);
-            if ($cm->modname != 'hsforum' || $active && ($currenttime > $dates->enddate) || !empty($idnumber) != $cm->idnumber) {
+            if ($cm->modname != 'hsforum' || $active && ($currenttime > $dates->enddate) || (!empty($idnumber) && ($idnumber != $cm->idnumber))) {
                 continue;
             }
             $unread +=  hsuforum_count_forum_unread_posts($cm, $cm->get_course());
@@ -203,7 +203,7 @@ class user_info
         $modsinfo = get_fast_modinfo($courseid);
         foreach ($modsinfo->cms as $cm) {
             $dates = \course_info::get_activity_dates($cm);
-            if ($cm->modname != 'dialogue' || $active && ($currenttime > $dates->enddate) || !empty($idnumber) != $cm->idnumber) {
+            if ($cm->modname != 'dialogue' || $active && ($currenttime > $dates->enddate) || (!empty($idnumber) && ($idnumber != $cm->idnumber))) {
                 continue;
             }
             $unread +=  dialogue_cm_unread_total(new \mod_dialogue\dialogue($cm));
