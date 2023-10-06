@@ -25,13 +25,6 @@ require_once($CFG->dirroot . '/lib/grade/constants.php');
 
 class user_info
 {
-    public static $gradableids = 
-    [
-        'gradable_forum',
-        'gradable_assign',
-        'gradable_quiz'
-    ];
-
     protected $user;
 
     public function __construct($userid) {
@@ -72,7 +65,7 @@ class user_info
         $activities = [];
         $courses = !empty($courseid) ? [get_course($courseid)] : enrol_get_all_users_courses($this->user->id,true);
         foreach ($courses as $course) {
-            $coursedata = \course_info::get_course_activities($course->id, $active, $gradable);
+            $coursedata = \course_info::get_course_activities($course->id, $active);
 
             if (empty($activities)) {
                 $activities = $coursedata['activities'];
@@ -83,9 +76,11 @@ class user_info
 
         $filteredactivities = [];
         foreach ($activities as $index => $activity) {
-            $uvid = self::get_activity_uvid($activity['id']);
             $gradeitem = \grade_get_grade_items_for_activity((object)$activity, true);
-            if (in_array($uvid, self::$gradableids) && $gradable || !in_array($uvid, self::$gradableids) && !$gradable) {
+            if (!empty($gradeitem) && $gradable) {
+                $filteredactivities[] = $activity;
+            }
+            if (empty($gradeitem) && !$gradable) {
                 $filteredactivities[] = $activity;
             }
         }
@@ -163,53 +158,56 @@ class user_info
         $finishedcourses = [];
         $number = 0;
         foreach ($courses as $course) {
-            if ($course->enddate < time()) {
-                $number++;
-                $current['number'] = $number;
-                $current['shortname'] = $course->shortname;
-                $current['fullname'] = $course->fullname;
-                $current['startdate'] = $course->startdate > 0 ? date('d M Y', $course->enddate) : 'Sin fecha';
-                $current['enddate'] = $course->enddate > 0 ? date('d M Y', $course->enddate) : 'Sin fecha';
-                $finishedcourses[] = $current;
-            }
+            $number++;
+            $current['number'] = $number;
+            $current['shortname'] = $course->shortname;
+            $current['fullname'] = $course->fullname;
+            $current['startdate'] = date('d M Y', $course->startdate);
+            $current['enddate'] = date('d M Y', $course->enddate);;
+            $finishedcourses[] = $current;
         }
         return $finishedcourses;
     }
 
-    public function get_plugin_user_unread_info($courseid, $active = false, $idnumber = false, $plugin = 'forum') {
+    public function get_forums_user_unread_info($courseid, $active = false) {
         $unread = 0;
         $currenttime = time();
         $modsinfo = get_fast_modinfo($courseid);
         foreach ($modsinfo->cms as $cm) {
-            $sections = $modsinfo->get_sections();
-            $format = course_get_format($courseid);
-            $section = array_search($cm->id, $sections[$cm->sectionnum]);
-            $dates = \block_grade_overview_get_section_dates($format, $section);
-            if ($cm->modname != $plugin || 
-                $active && ($currenttime > $dates->enddate) || 
-                !empty($idnumber) && $cm->idnumber != $idnumber) {
+            $dates = \course_info::get_activity_dates($cm);
+            if ($cm->modname != 'forum' || $active && ($currenttime > $dates->enddate)) {
                 continue;
             }
-            switch ($plugin) {
-                case 'forum': 
-                    $unread +=  forum_tp_count_forum_unread_posts($cm, $cm->get_course());
-                    break;
-                case 'hsuforum': 
-                    $unread +=  hsuforum_count_forum_unread_posts($cm, $cm->get_course());
-                    break;
-                case 'dialogue': 
-                    $unread +=  dialogue_cm_unread_total(new \mod_dialogue\dialogue($cm));
-                    break;
-            }
-        }     
+            $unread +=  forum_tp_count_forum_unread_posts($cm, $cm->get_course());
+        }
         return $unread;
     }
 
-    public static function get_activity_uvid($cmid) {
-        global $DB;
+    public function get_hsforums_user_unread_info($courseid, $active = false, $idnumber = false) {
+        $unread = 0;
+        $currenttime = time();
+        $modsinfo = get_fast_modinfo($courseid);
+        foreach ($modsinfo->cms as $cm) {
+            $dates = \course_info::get_activity_dates($cm);
+            if ($cm->modname != 'hsforum' || $active && ($currenttime > $dates->enddate) || (!empty($idnumber) && ($idnumber != $cm->idnumber))) {
+                continue;
+            }
+            $unread +=  hsuforum_count_forum_unread_posts($cm, $cm->get_course());
+        }
+        return $unread;
+    }
 
-        $uvidrecord = $DB->get_record('course_modules_custom_fields', ['cmid' => $cmid]);
-
-        return $uvidrecord->uvmodid;
+    public function get_dialogue_unread_info($courseid, $active = false, $idnumber = false) {
+        $unread = 0;
+        $currenttime = time();
+        $modsinfo = get_fast_modinfo($courseid);
+        foreach ($modsinfo->cms as $cm) {
+            $dates = \course_info::get_activity_dates($cm);
+            if ($cm->modname != 'dialogue' || $active && ($currenttime > $dates->enddate) || (!empty($idnumber) && ($idnumber != $cm->idnumber))) {
+                continue;
+            }
+            $unread +=  dialogue_cm_unread_total(new \mod_dialogue\dialogue($cm));
+        }
+        return $unread;
     }
 }
