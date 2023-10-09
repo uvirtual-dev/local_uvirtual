@@ -65,7 +65,7 @@ class user_info
         $activities = [];
         $courses = !empty($courseid) ? [get_course($courseid)] : enrol_get_all_users_courses($this->user->id,true);
         foreach ($courses as $course) {
-            $coursedata = \course_info::get_course_activities($course->id, $active);
+            $coursedata = \course_info::get_course_activities($course->id, $active, $gradable);
 
             if (empty($activities)) {
                 $activities = $coursedata['activities'];
@@ -158,13 +158,15 @@ class user_info
         $finishedcourses = [];
         $number = 0;
         foreach ($courses as $course) {
-            $number++;
-            $current['number'] = $number;
-            $current['shortname'] = $course->shortname;
-            $current['fullname'] = $course->fullname;
-            $current['startdate'] = date('d M Y', $course->startdate);
-            $current['enddate'] = date('d M Y', $course->enddate);;
-            $finishedcourses[] = $current;
+            if ($course->enddate < time()) {
+                $number++;
+                $current['number'] = $number;
+                $current['shortname'] = $course->shortname;
+                $current['fullname'] = $course->fullname;
+                $current['startdate'] = $course->startdate > 0 ? date('d M Y', $course->enddate) : 'Sin fecha';
+                $current['enddate'] = $course->enddate > 0 ? date('d M Y', $course->enddate) : 'Sin fecha';
+                $finishedcourses[] = $current;
+            }
         }
         return $finishedcourses;
     }
