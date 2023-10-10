@@ -58,14 +58,14 @@ class user_info
         return $userhistorico;
     }
 
-    public function get_mods($gradable = false, $pretty = false, $active = false, $courseid = false) {
+    public function get_mods($gradable = false, $pretty = false, $active = false, $courseid = false, $contpend = false) {
         if (empty($this->user)) {
             return [];
         }
         $activities = [];
         $courses = !empty($courseid) ? [get_course($courseid)] : enrol_get_all_users_courses($this->user->id,true);
         foreach ($courses as $course) {
-            $coursedata = \course_info::get_course_activities($course->id, $active, $gradable);
+            $coursedata = \course_info::get_course_activities($course->id, $active, $gradable, $contpend);
 
             if (empty($activities)) {
                 $activities = $coursedata['activities'];
@@ -87,7 +87,8 @@ class user_info
         $activitiesinfo = [];
         foreach ($filteredactivities as $atv) {
             $gradeitem = $gradable ?
-                \grade_user_management::get_user_mod_grade($this->user->id, $atv['instance'], $atv['type'], $atv['courseid']) : false;
+                \grade_user_management::get_user_mod_grade(
+                    $this->user->id, $atv['instance'], $atv['type'], $atv['courseid']) : false;
             $split = !empty($gradeitem->str_long_grade) ? explode('/', $gradeitem->str_long_grade) : [0,0];
             $gradeplit =  count($split) > 1 ? $split: [0,0];
             $maxgrade =  number_format((float)$gradeplit[1], 2, '.', '');
@@ -169,30 +170,6 @@ class user_info
             }
         }
         return $finishedcourses;
-    }
-
-    public function get_plugin_user_unread_info($courseid, $idnumber) {
-        global $DB;
-        $unread = 0;
-        $cmrecord = $DB->get_record('course_modules', ['idnumber' => $idnumber, 'course' => $courseid], 'id');
-        if (empty($cmrecord)) {
-            return $unread;
-        }
-        list($course, $cm) = get_course_and_cm_from_cmid($cmrecord->id, '', $courseid);
-
-        switch ($cm->modname) {
-            case 'forum': 
-                $unread =  forum_tp_count_forum_unread_posts($cm, $course);
-                break;
-            case 'hsuforum': 
-                $unread =  hsuforum_count_forum_unread_posts($cm, $course);
-                break;
-            case 'dialogue': 
-                $unread =  dialogue_cm_unread_total(new \mod_dialogue\dialogue($cm));
-                break;
-            }
-
-        return $unread;
     }
 
     public static function get_activity_uvid($cmid) {
