@@ -73,7 +73,7 @@ class user_info
                 array_merge($activities, $coursedata['activities']);
             }
         }
-        
+ 
         $activitiesinfo = [];
         foreach ($activities as $atv) {
             $gradeitem = \grade_get_grade_items_for_activity((object)$atv, true);
@@ -136,7 +136,6 @@ class user_info
         if(isset($historico)){
             $prom = $sum / count($historico);
         }
-        
 
         return $prom;
     }
