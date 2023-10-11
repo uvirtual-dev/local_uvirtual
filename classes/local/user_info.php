@@ -73,20 +73,11 @@ class user_info
                 array_merge($activities, $coursedata['activities']);
             }
         }
-
-        $filteredactivities = [];
-        foreach ($activities as $index => $activity) {
-            $gradeitem = \grade_get_grade_items_for_activity((object)$activity, true);
-            if (!empty($gradeitem) && $gradable) {
-                $filteredactivities[] = $activity;
-            }
-            if (empty($gradeitem) && !$gradable) {
-                $filteredactivities[] = $activity;
-            }
-        }
+        
         $activitiesinfo = [];
-        foreach ($filteredactivities as $atv) {
-            $gradeitem = $gradable ?
+        foreach ($activities as $atv) {
+            $gradeitem = \grade_get_grade_items_for_activity((object)$atv, true);
+            $gradeitem = !empty($gradeitem) ?
                 \grade_user_management::get_user_mod_grade(
                     $this->user->id, $atv['instance'], $atv['type'], $atv['courseid']) : false;
             $split = !empty($gradeitem->str_long_grade) ? explode('/', $gradeitem->str_long_grade) : [0,0];
@@ -95,7 +86,7 @@ class user_info
             $gradeuser = number_format((float)$gradeplit[0], 2, '.', '');
 
             $status = '';
-            if ($gradable) {
+            if ($gradeitem && $gradable) {
                 if (!empty($gradeitem->dategraded)) {
                     if (((float)$gradeuser > (((float)$maxgrade)/2))) {
                         $status = 'approved';
@@ -108,7 +99,7 @@ class user_info
                     $status = 'notsubm';
                 }
             } else {
-                if ($atv['viewed']) {
+                if ($atv['viewed'] || !empty($gradeitem->dategraded)) {
                     $status = 'viewed';
                 } else {
                     $status = 'notviewed';
