@@ -58,14 +58,14 @@ class user_info
         return $userhistorico;
     }
 
-    public function get_mods($gradable = false, $pretty = false, $active = false, $courseid = false) {
+    public function get_mods($gradable = false, $pretty = false, $active = false, $courseid = false, $contpend = false) {
         if (empty($this->user)) {
             return [];
         }
         $activities = [];
         $courses = !empty($courseid) ? [get_course($courseid)] : enrol_get_all_users_courses($this->user->id,true);
         foreach ($courses as $course) {
-            $coursedata = \course_info::get_course_activities($course->id, $active);
+            $coursedata = \course_info::get_course_activities($course->id, $active, $gradable, $contpend);
 
             if (empty($activities)) {
                 $activities = $coursedata['activities'];
@@ -73,28 +73,20 @@ class user_info
                 array_merge($activities, $coursedata['activities']);
             }
         }
-
-        $filteredactivities = [];
-        foreach ($activities as $index => $activity) {
-            $gradeitem = \grade_get_grade_items_for_activity((object)$activity, true);
-            if (!empty($gradeitem) && $gradable) {
-                $filteredactivities[] = $activity;
-            }
-            if (empty($gradeitem) && !$gradable) {
-                $filteredactivities[] = $activity;
-            }
-        }
+ 
         $activitiesinfo = [];
-        foreach ($filteredactivities as $atv) {
-            $gradeitem = $gradable ?
-                \grade_user_management::get_user_mod_grade($this->user->id, $atv['instance'], $atv['type'], $atv['courseid']) : false;
+        foreach ($activities as $atv) {
+            $gradeitem = \grade_get_grade_items_for_activity((object)$atv, true);
+            $gradeitem = !empty($gradeitem) ?
+                \grade_user_management::get_user_mod_grade(
+                    $this->user->id, $atv['instance'], $atv['type'], $atv['courseid']) : false;
             $split = !empty($gradeitem->str_long_grade) ? explode('/', $gradeitem->str_long_grade) : [0,0];
             $gradeplit =  count($split) > 1 ? $split: [0,0];
             $maxgrade =  number_format((float)$gradeplit[1], 2, '.', '');
             $gradeuser = number_format((float)$gradeplit[0], 2, '.', '');
 
             $status = '';
-            if ($gradable) {
+            if ($gradeitem && $gradable) {
                 if (!empty($gradeitem->dategraded)) {
                     if (((float)$gradeuser > (((float)$maxgrade)/2))) {
                         $status = 'approved';
@@ -107,7 +99,7 @@ class user_info
                     $status = 'notsubm';
                 }
             } else {
-                if ($atv['viewed']) {
+                if ($atv['viewed'] || !empty($gradeitem->dategraded)) {
                     $status = 'viewed';
                 } else {
                     $status = 'notviewed';
@@ -144,7 +136,6 @@ class user_info
         if(isset($historico)){
             $prom = $sum / count($historico);
         }
-        
 
         return $prom;
     }
@@ -158,56 +149,24 @@ class user_info
         $finishedcourses = [];
         $number = 0;
         foreach ($courses as $course) {
-            $number++;
-            $current['number'] = $number;
-            $current['shortname'] = $course->shortname;
-            $current['fullname'] = $course->fullname;
-            $current['startdate'] = date('d M Y', $course->startdate);
-            $current['enddate'] = date('d M Y', $course->enddate);;
-            $finishedcourses[] = $current;
+            if ($course->enddate < time()) {
+                $number++;
+                $current['number'] = $number;
+                $current['shortname'] = $course->shortname;
+                $current['fullname'] = $course->fullname;
+                $current['startdate'] = $course->startdate > 0 ? date('d M Y', $course->enddate) : 'Sin fecha';
+                $current['enddate'] = $course->enddate > 0 ? date('d M Y', $course->enddate) : 'Sin fecha';
+                $finishedcourses[] = $current;
+            }
         }
         return $finishedcourses;
     }
 
-    public function get_forums_user_unread_info($courseid, $active = false) {
-        $unread = 0;
-        $currenttime = time();
-        $modsinfo = get_fast_modinfo($courseid);
-        foreach ($modsinfo->cms as $cm) {
-            $dates = \course_info::get_activity_dates($cm);
-            if ($cm->modname != 'forum' || $active && ($currenttime > $dates->enddate)) {
-                continue;
-            }
-            $unread +=  forum_tp_count_forum_unread_posts($cm, $cm->get_course());
-        }
-        return $unread;
-    }
+    public static function get_activity_uvid($cmid) {
+        global $DB;
 
-    public function get_hsforums_user_unread_info($courseid, $active = false, $idnumber = false) {
-        $unread = 0;
-        $currenttime = time();
-        $modsinfo = get_fast_modinfo($courseid);
-        foreach ($modsinfo->cms as $cm) {
-            $dates = \course_info::get_activity_dates($cm);
-            if ($cm->modname != 'hsforum' || $active && ($currenttime > $dates->enddate) || (!empty($idnumber) && ($idnumber != $cm->idnumber))) {
-                continue;
-            }
-            $unread +=  hsuforum_count_forum_unread_posts($cm, $cm->get_course());
-        }
-        return $unread;
-    }
+        $uvidrecord = $DB->get_record('course_modules_custom_fields', ['cmid' => $cmid]);
 
-    public function get_dialogue_unread_info($courseid, $active = false, $idnumber = false) {
-        $unread = 0;
-        $currenttime = time();
-        $modsinfo = get_fast_modinfo($courseid);
-        foreach ($modsinfo->cms as $cm) {
-            $dates = \course_info::get_activity_dates($cm);
-            if ($cm->modname != 'dialogue' || $active && ($currenttime > $dates->enddate) || (!empty($idnumber) && ($idnumber != $cm->idnumber))) {
-                continue;
-            }
-            $unread +=  dialogue_cm_unread_total(new \mod_dialogue\dialogue($cm));
-        }
-        return $unread;
+        return $uvidrecord->uvmodid;
     }
 }
