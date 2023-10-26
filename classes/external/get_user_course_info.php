@@ -94,21 +94,23 @@ class get_user_course_info extends external_api {
         $currentweeks = 0.;
         foreach ($gradableatvs as $atv) {
             $section = $atv['section'];
-            $sectiondate = $format->get_section_dates($section);
-
-            if (!isset($sections[$atv['section']])) {
-                $semana++;
-                if($sectiondate->start <= $ahora) {
-                    $currentweeks++;
+            $formatname = $format->get_format();
+            if ($formatname == 'weeks' || $formatname == 'uvirtual') {
+                $sectiondate = $format->get_section_dates($section, $courseid);
+                if (!isset($sections[$atv['section']])) {
+                    $semana++;
+                    if($sectiondate->start <= $ahora) {
+                        $currentweeks++;
+                    }
+                    $sections[$atv['section']] =
+                        [
+                            'numberWeek' => $semana,
+                            'dateStart' => $sectiondate->start,
+                            'dateEnd' => $sectiondate->end,
+                        ];
                 }
-                $sections[$atv['section']] =
-                    [
-                        'numberWeek' => $semana,
-                        'dateStart' => $sectiondate->start,
-                        'dateEnd' => $sectiondate->end,
-                    ];
             }
-
+            
             $gradeitem = \grade_user_management::get_user_mod_grade($studentid, $atv['instance'], $atv['type'], $courseid);
 
             $gradeplit =  !empty($gradeitem->str_long_grade) ? explode('/', $gradeitem->str_long_grade) : [0,0];

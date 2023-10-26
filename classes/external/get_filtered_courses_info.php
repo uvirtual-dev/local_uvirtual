@@ -51,7 +51,7 @@ class get_filtered_courses_info extends external_api {
         return new external_function_parameters(
             [
                 'filter' => new external_value(PARAM_TEXT, 'Course id', VALUE_REQUIRED, ''),
-                'roleIdsTutors' =>  new external_multiple_structure(
+                'roleIdsTeachers' =>  new external_multiple_structure(
                     new external_value(PARAM_TEXT, 'Role ids tutors', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, []),
                 'roleIdsOthers' =>  new external_multiple_structure(
                     new external_value(PARAM_TEXT, 'Role ids others', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, [])
@@ -72,12 +72,12 @@ class get_filtered_courses_info extends external_api {
         global $DB;
         $params = [
             'filter'  => $filter,
-            'roleIdsTutors' => $roleidstutors,
+            'roleIdsTeachers' => $roleidstutors,
             'roleIdsOthers' => $roleidsothers
         ];
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $filter = $params['filter'];
-        $roleidstutors = $params['roleIdsTutors'];
+        $roleidstutors = $params['roleIdsTeachers'];
         $roleidsothers = $params['roleIdsOthers'];
 
         $sql = "SELECT id, fullname as name, shortname as shortName, startdate as startDate, enddate as endDate
@@ -95,6 +95,20 @@ class get_filtered_courses_info extends external_api {
             $courseinfo->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields, $roleidstutors));
             $courseinfo->others = array_values(course_info::get_course_tutor($courseinfo->id, $othersfields, $roleidsothers));
             $courseinfo->status = ($coursesinfo->startDate < time()) && ($coursesinfo->endDate > time());
+            $ahora = time();
+            if ($ahora > $courseinfo->startdate && $ahora < $courseinfo->enddate) {
+                $format = \course_get_format($coursesinfo->id);
+                $formatname = $format->get_format();
+                if ($formatname == 'weeks' || $formatname == 'uvirtual') {
+                    $sections = $format->get_sections();
+                    foreach ($sections as $section) {
+                        $date = $format->get_section_dates($section, $coursesinfo->id);
+                        if ($ahora > $date->start && $ahora < $date->end) {
+                            $courseinfo->currentWeek = $section->section;
+                        }
+                    }
+                }
+            }
         }
 
 
