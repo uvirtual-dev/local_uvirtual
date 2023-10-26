@@ -75,7 +75,7 @@ class get_user_course_info extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $courseid = $params['courseId'];
         $studentid = $params['studentId'];
-        $coursedata = \course_info::get_course_activities($courseid);
+        $coursedata = \course_info::get_course_activities($courseid, false, true);
         $activities = $coursedata['activities'];
 
         $gradableatvs = [];
@@ -134,7 +134,7 @@ class get_user_course_info extends external_api {
         if (!empty($category)) {
             $gradeitems = \grade_item::fetch_all(array('courseid' => $courseid, 'categoryid' => $category->id));
             foreach ($gradeitems as $gradeitem) {
-                $vcgrade += $gradeitem->get_grade($studentid, true)->finalgrade;
+                $vdgrade += $gradeitem->get_grade($studentid, true)->finalgrade;
             }
         }
         $user = reset(user_get_users_by_id([$studentid]));
@@ -143,12 +143,12 @@ class get_user_course_info extends external_api {
             'lastname' => $user->lastname,
             'email' => $user->email
         ];
-        $totalgrade = number_format($fullgrade + (float)$vcgrade, 2, '.', '');
+        $totalgrade = number_format($fullgrade + (float)$vdgrade, 2, '.', '');
 
         $response['totals'] = [
             'totalCourseStudent' => number_format($fullgrade, 2, '.', ''),
             'totalCourseTotal' => $currentweeks * (100 / $semana),
-            'videoconferencesStudent' => $vcgrade,
+            'videoconferencesStudent' => $vdgrade,
             'videoconferencesTotal' => 5,
             'finalGradeStudent' => ($totalgrade) <= 100 ? $totalgrade: 100,
             'finalGradeCourse' => 100
