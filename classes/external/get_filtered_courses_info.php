@@ -102,7 +102,6 @@ class get_filtered_courses_info extends external_api {
                     foreach ($sections as $section) {
                         $date = $format->get_section_dates($section->section, $courseinfo->id);
                         if ($ahora > $date->start && $ahora < $date->end) {
-                            var_dump('hola');
                             $coursesinfo[$courseid]->currentWeek = $section->section;
                         }
                     }
