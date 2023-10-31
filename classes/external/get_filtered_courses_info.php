@@ -87,24 +87,23 @@ class get_filtered_courses_info extends external_api {
                  ORDER BY startdate DESC";
 
         $coursesinfo = $DB->get_records_sql($sql);
-
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
         $othersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, r.shortname as rol';
-
-        foreach ($coursesinfo as $courseinfo) {
-            $courseinfo->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields, $roleidstutors));
-            $courseinfo->others = array_values(course_info::get_course_tutor($courseinfo->id, $othersfields, $roleidsothers));
-            $courseinfo->status = ($coursesinfo->startDate < time()) && ($coursesinfo->endDate > time());
+        foreach ($coursesinfo as $courseid => $courseinfo) {
+            $coursesinfo[$courseid]->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields, $roleidstutors));
+            $coursesinfo[$courseid]->others = array_values(course_info::get_course_tutor($courseinfo->id, $othersfields, $roleidsothers));
+            $coursesinfo[$courseid]->status = ($courseinfo->startDate < time()) && ($courseinfo->endDate > time());
             $ahora = time();
             if ($ahora > $courseinfo->startdate && $ahora < $courseinfo->enddate) {
-                $format = \course_get_format($coursesinfo->id);
+                $format = \course_get_format($courseinfo->id);
                 $formatname = $format->get_format();
                 if ($formatname == 'weeks' || $formatname == 'uvirtual') {
                     $sections = $format->get_sections();
                     foreach ($sections as $section) {
-                        $date = $format->get_section_dates($section, $coursesinfo->id);
+                        $date = $format->get_section_dates($section->section, $courseinfo->id);
                         if ($ahora > $date->start && $ahora < $date->end) {
-                            $courseinfo->currentWeek = $section->section;
+                            var_dump('hola');
+                            $coursesinfo[$courseid]->currentWeek = $section->section;
                         }
                     }
                 }
