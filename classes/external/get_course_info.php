@@ -89,10 +89,11 @@ class get_course_info extends external_api {
         if ($ahora > $courseinfo->startdate && $ahora < $courseinfo->enddate) {
             $format = \course_get_format($courseid);
             $formatname = $format->get_format();
+
             if ($formatname == 'weeks' || $formatname == 'uvirtual') {
                 $sections = $format->get_sections();
                 foreach ($sections as $section) {
-                    $date = $format->get_section_dates($section, $courseid);
+                    $date = $format->get_section_dates($section->section, $courseid);
                     if ($ahora > $date->start && $ahora < $date->end) {
                         $courseinfo->currentWeek = $section->section;
                     }
