@@ -100,7 +100,7 @@ class get_filtered_courses_info extends external_api {
                 if ($formatname == 'weeks' || $formatname == 'uvirtual') {
                     $sections = $format->get_sections();
                     foreach ($sections as $section) {
-                        $date = $format->get_section_dates($section->section, $courseinfo->id);
+                        $date = $format->get_section_dates($section);
                         if ($ahora > $date->start && $ahora < $date->end) {
                             $coursesinfo[$courseid]->currentWeek = $section->section;
                         }
