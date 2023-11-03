@@ -14,18 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Plugin version information.
- *
- * @package     local_uvirtual
- * @copyright   2022 Oscar Nadjar <oscar.nadjar@uvirtual.org>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_uvirtual';
-$plugin->release = '3.11';
-$plugin->version = 2023090605;
-$plugin->requires = 2020110900;
-$plugin->maturity = MATURITY_ALPHA;
+$tasks = array(
+    array(
+        'classname' => '\local_uvirtual\task\send_emails_teachers_format_uvirtual',
+        'blocking' => 0,
+        'minute' => '30',
+        'hour' => '11,22',
+        'day' => '*',
+		'month' => '*',
+		'dayofweek' => '*',
+    )
+);
