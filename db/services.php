@@ -97,25 +97,33 @@ $functions = [
         'description' => '',
         'type' => 'read'
     ],
+    'local_uvirtual_get_courses_basic_info' => [
+        'classname' => 'local_uvirtual\external\get_courses_basic_info',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => '',
+        'type' => 'read'
+    ],
 ];
 
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
 $services = [
     'Uvirtual manage users ws' =>
         [
-        'functions' => [
-            'local_uvirtual_create_users',
-            'local_uvirtual_update_users',
-            'local_uvirtual_enrol_users',
-            'local_uvirtual_unenrol_users',
-            'local_uvirtual_get_course_categories',
-            'local_uvirtual_get_user_info',
-            'local_uvirtual_get_course_info',
-            'local_uvirtual_get_filtered_courses_info',
-            'local_uvirtual_get_user_course_info',
-            'local_uvirtual_get_courses_count_info'
-        ],
-        'restrictedusers' => 0,
-        'enabled' => 1,
+            'functions' => [
+                'local_uvirtual_create_users',
+                'local_uvirtual_update_users',
+                'local_uvirtual_enrol_users',
+                'local_uvirtual_unenrol_users',
+                'local_uvirtual_get_course_categories',
+                'local_uvirtual_get_user_info',
+                'local_uvirtual_get_course_info',
+                'local_uvirtual_get_filtered_courses_info',
+                'local_uvirtual_get_user_course_info',
+                'local_uvirtual_get_courses_count_info',
+                'local_uvirtual_get_courses_basic_info'
             ],
+            'restrictedusers' => 0,
+            'enabled' => 1,
+        ]
 ];
