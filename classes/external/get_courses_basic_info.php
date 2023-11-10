@@ -50,7 +50,7 @@ class get_courses_basic_info extends external_api {
     public static function execute_parameters() {
         return new external_function_parameters(
             [
-                'typeCourse' => new external_value(PARAM_TEXT, 'uvirtual course type', VALUE_REQUIRED, ''),
+                'typeCourse' => new external_value(PARAM_TEXT, 'uvirtual course type', VALUE_DEFAULT, ''),
                 'roleIdsTeachers' =>  new external_multiple_structure(
                     new external_value(PARAM_TEXT, 'Role ids tutors', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, []),
                 'activeCourses' => new external_value(PARAM_BOOL, 'active', VALUE_DEFAULT, 0),
@@ -87,15 +87,17 @@ class get_courses_basic_info extends external_api {
         }
         
         $currenttime = time();
-        $timesql = "timestart < $currenttime AND timeend > $currenttime";
+        $timesql = "startdate < $currenttime AND enddate > $currenttime";
         if (empty($activecourses) && !empty($timefilter)) {
-            $timesql = "timestart >= $timefilter";
+            $timesql = "startdate >= $timefilter";
         }
 
-        $sql = "SELECT id, shortname, startdate, enddate,  
+        $sql = "SELECT id, shortname, startdate, enddate 
                          FROM {course} 
                         WHERE $timesql
                               AND visible = 1";
+                                      var_dump($sql);
+
         $courses = $DB->get_records_sql($sql);
 
         $coursesinfo = [];
