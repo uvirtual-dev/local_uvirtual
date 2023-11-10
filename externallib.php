@@ -15,17 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version information.
+ * External local_uvirtual API
  *
- * @package     local_uvirtual
- * @copyright   2022 Oscar Nadjar <oscar.nadjar@uvirtual.org>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_uvirtual
+ * @copyright  2023 Oscar nadjar
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$plugin->component = 'local_uvirtual';
-$plugin->release = '3.11';
-$plugin->version = 2023110900;
-$plugin->requires = 2020110900;
-$plugin->maturity = MATURITY_ALPHA;
+
+/**
+ * External assign API
+ * @copyright  2023 Oscar Nadjar    
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class local_uvirtual_external extends \mod_assign\external\external_api {
+}
