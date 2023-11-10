@@ -76,7 +76,7 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task {
 
                 foreach ($courses as $course) {
 
-                    $teachers = \course_info::get_course_tutor($course->id);
+                    $teachers = \course_info::get_course_tutor($course->id,'u.*',[9]);
 
                     if (!empty($teachers)) {
                         foreach ($teachers as $teacher) {
