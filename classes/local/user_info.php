@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use core_reportbuilder\local\filters\number;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/user/lib.php');
@@ -42,12 +44,21 @@ class user_info
         }
         $curl = new curl();
 
-        $libraryws = get_config('block_grade_overview', 'historicows');
+        $historicows = get_config('block_grade_overview', 'historicows');
         $args = [
             'email' => $this->user->email
         ];
         $minimungrade = get_config('block_grade_overview', 'historicomingrade');
-        $userhistorico = json_decode($curl->post($libraryws, $args), true);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $historicows);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $args);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        $userhistorico = json_decode($response, true);
 
         if (!isset($userhistorico['msg'])) {
             foreach ($userhistorico as $number => $courseinfo) {
@@ -137,7 +148,7 @@ class user_info
             $prom = $sum / count($historico);
         }
 
-        return $prom;
+        return number_format($prom, 2, '.');
     }
 
     public function get_complete_courses() {
