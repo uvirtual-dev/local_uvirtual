@@ -55,6 +55,7 @@ class get_courses_basic_info extends external_api {
                     new external_value(PARAM_TEXT, 'Role ids tutors', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, []),
                 'activeCourses' => new external_value(PARAM_BOOL, 'active', VALUE_DEFAULT, 0),
                 'timeFilter' => new external_value(PARAM_INT, 'Filter', VALUE_DEFAULT, 0),
+                'nextCourses' => new external_value(PARAM_BOOL, 'Filters courses starting 3 month on the future', VALUE_DEFAULT, 0)
             ]
         );
     }
@@ -68,19 +69,21 @@ class get_courses_basic_info extends external_api {
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($typecourse, $roleidstutors, $activecourses, $timefilter) {
+    public static function execute($typecourse, $roleidstutors, $activecourses, $timefilter, $nextcourses) {
         global $DB;
         $params = [
             'typeCourse'  => $typecourse,
             'roleIdsTeachers' => $roleidstutors,
             'activeCourses' => $activecourses,
-            'timeFilter' => $timefilter
+            'timeFilter' => $timefilter,
+            'nextCourses' => $nextcourses
         ];
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $typeCourse = $params['typeCourse'];
         $roleidstutors = $params['roleIdsTeachers'];
         $activecourses = $params['activeCourses'];
         $timefilter = $params['timeFilter'];
+        $nextcourses = $params['nextCourses'];
 
         if (empty($typeCourse)) {
             $typeCourse = empty($timefilter) ? 'all' : 'Regular';
@@ -90,6 +93,10 @@ class get_courses_basic_info extends external_api {
         $timesql = "startdate < $currenttime AND enddate > $currenttime";
         if (empty($activecourses) && !empty($timefilter)) {
             $timesql = "startdate >= $timefilter";
+        }
+        if (empty($activecourses) && empty($timefilter) && !empty($nextcourses)) {
+            $timeend = $currenttime + DAYSECS * 90;
+            $timesql = "startdate >= $currenttime AND enddate <= $timeend";
         }
 
         $sql = "SELECT id, shortname, startdate, enddate 
