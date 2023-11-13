@@ -75,8 +75,10 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task {
                 mtrace($mensaje);
 
                 foreach ($courses as $course) {
-                    $teacherroleids = array_values(get_archetype_roles('teacher'));
-                    $teachers = \course_info::get_course_tutor($course->id, 'u.*', $teacherroleids);
+                    $teacherid = array_keys(get_archetype_roles('teacher'));
+                    $editingteacherid = array_keys(get_archetype_roles('editingteacher'));
+                    $teacherroleids = array_merge($editingteacherid, $teacherid);
+                    $teachers = \course_info::get_course_tutor($course->id, 'u.*', array_values($teacherroleids));
 
                     if (!empty($teachers)) {
                         foreach ($teachers as $teacher) {
@@ -107,7 +109,7 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task {
             }
 
         } else {
-            $mensaje = ' No hay nada para enviar, el día de la semana es: ' . $diasem;
+            $mensaje = ' No hay nada para enviar';
             mtrace($mensaje);
         }
     }
