@@ -25,5 +25,14 @@ $tasks = array(
         'day' => '*',
 		'month' => '*',
 		'dayofweek' => '*',
+    ),
+    array(
+        'classname' => '\local_uvirtual\task\send_emails_students_format_uvirtual',
+        'blocking' => 0,
+        'minute' => '30',
+        'hour' => '11,22',
+        'day' => '*',
+		'month' => '*',
+		'dayofweek' => '*',
     )
 );
