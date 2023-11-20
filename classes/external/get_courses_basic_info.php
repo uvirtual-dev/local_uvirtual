@@ -103,7 +103,6 @@ class get_courses_basic_info extends external_api {
                          FROM {course} 
                         WHERE $timesql
                               AND visible = 1";
-                                      var_dump($sql);
 
         $courses = $DB->get_records_sql($sql);
 
