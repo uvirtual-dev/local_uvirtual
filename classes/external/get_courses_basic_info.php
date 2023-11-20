@@ -99,7 +99,7 @@ class get_courses_basic_info extends external_api {
             $timesql = "startdate >= $currenttime AND enddate <= $timeend";
         }
 
-        $sql = "SELECT id, shortname, startdate, enddate 
+        $sql = "SELECT id, shortname as name, startdate, enddate 
                          FROM {course} 
                         WHERE $timesql
                               AND visible = 1";

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 namespace local_uvirtual\task;
 require_once($CFG->dirroot . '/blocks/grade_overview/lib.php');
+require_once($CFG->dirroot . '/blocks/grade_overview/classes/course_info.php');
+require_once($CFG->dirroot . '/course/format/uvirtual/lib.php');
 
 
 defined('MOODLE_INTERNAL') || die();
