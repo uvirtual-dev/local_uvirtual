@@ -88,7 +88,7 @@ class send_emails_students_format_uvirtual extends \core\task\scheduled_task {
                                 $html .= '</div>';
                                 $mailobject = block_grade_overview_get_mail_object('reports', 'student');
                                 $mailobject->address = empty($mailobject->address) ? $student->email : $mailobject->address;
-                                $mailobject->subject = $course->shortname;
+                                $mailobject->subject = "Actividades pendientes - ".$course->shortname;
                                 $mailobject->body = $html;
                                 block_grade_overview_send_email($mailobject);
                             }
