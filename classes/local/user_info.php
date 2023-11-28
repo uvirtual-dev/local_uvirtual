@@ -42,7 +42,6 @@ class user_info
         if (empty($this->user)) {
             return [];
         }
-        $curl = new curl();
 
         $historicows = get_config('block_grade_overview', 'historicows');
         $args = [
@@ -65,6 +64,8 @@ class user_info
                 $userhistorico[$number]['number'] = (int)$number + 1;
                 $userhistorico[$number]['notapproved'] = (int)$courseinfo['grade'] >= (int)$minimungrade ? '' : 'notapproved';
             }
+        } else {
+            $userhistorico = [];
         }
         return $userhistorico;
     }
@@ -136,13 +137,13 @@ class user_info
     }
 
     public function get_historico_prom($historico) {
-        if (empty($historico)) {
-            return 0;
+        if (empty($historico) || !is_array($historico)) {
+            return [];
         }
         $sum = 0;
         $prom = 0;
         foreach ($historico as $coursesinfo) {
-            $sum += $coursesinfo['grade'];
+            $sum = $coursesinfo['grade'];
         }
         if(isset($historico)){
             $prom = $sum / count($historico);
