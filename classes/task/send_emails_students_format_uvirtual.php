@@ -75,6 +75,10 @@ class send_emails_students_format_uvirtual extends \core\task\scheduled_task {
                 mtrace($mensaje);
 
                 foreach ($courses as $course) {
+                    $issecondcall = format_uvirtual_get_course_metadata($course->id, 'Otros campos', 'typecourse', '6' );
+                    if ($issecondcall) {
+                        continue;
+                    }
                     $students = \course_info::get_course_students($course->id, 'u.*');
 
                     if (!empty($students)) {
