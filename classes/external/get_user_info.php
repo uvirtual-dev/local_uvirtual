@@ -45,6 +45,9 @@ class get_user_info extends external_api {
         return new external_function_parameters(
             [
                 'filter' => new external_value(PARAM_TEXT, 'Filter', VALUE_DEFAULT, ''),
+                'getCourses' => new external_value(PARAM_BOOL, 'Get courses', VALUE_DEFAULT, false),
+                'roleIdStudents' => new external_value(PARAM_INT, 'Student role id', VALUE_DEFAULT, 0),
+                'roleIdTeachers' => new external_value(PARAM_INT, 'Teacher role id', VALUE_DEFAULT, 0),
             ]
         );
     }
@@ -53,18 +56,26 @@ class get_user_info extends external_api {
      * Return the categories tree.
      *
      * @throws invalid_parameter_exception
-     * @param array $coursetype Course type to filter
-     * @param array $studentid Student id to filter
+     * @param string $filter
+     * @param bool $getcourses
+     * @param int $roleidstudents
+     * @param int $roleidteachers
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($filter) {
+    public static function execute($filter, $getcourses, $roleidstudents, $roleidteachers) {
         global $DB;
         $params = [
             'filter'  => $filter,
+            'getCourses' => $getcourses,
+            'roleIdStudents' => $roleidstudents,
+            'roleIdTeachers' => $roleidteachers,
         ];
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $filter = !empty($params['filter']) ? $params['filter'] : '';
+        $getCourses = !empty($params['getCourses']) ? $params['getCourses'] : false;
+        $roleIdStudents = !empty($params['roleIdStudents']) ? $params['roleIdStudents'] : [];
+        $roleIdTeachers = !empty($params['roleIdTeachers']) ? $params['roleIdTeachers'] : [];
 
 
         $sql = "SELECT id, firstname as firstName, lastname as lastName, email
@@ -78,6 +89,27 @@ class get_user_info extends external_api {
                 $sql .=  " OR CONCAT(firstname, ' ', lastname, ' ', email) LIKE '%$word%'";
             }
             $users = $DB->get_records_sql($sql);
+        }
+
+        if ($getCourses) {
+            $fields = 'c.id, c.shortname as shortName, c.fullname as fullName, c.startdate as startDate, c.enddate as endDate';
+            $sql = "SELECT $fields
+                      FROM {course} c
+                      JOIN {context} ctx ON ctx.instanceid = c.id
+                      JOIN {role_assignments} ra ON ra.contextid = ctx.id
+                     WHERE ra.userid = ? AND ra.roleid = ?";
+
+            foreach ($users as $index => $user) {
+                $courses = $DB->get_records_sql($sql, [$user->id, $roleIdStudents]);
+                foreach ($courses as $id => $course) {
+                    $courses[$id]->grade = grade_get_course_grade($user->id, $course->id);
+                    $courses[$id]->currentWeek = format_uvirtual_get_course_current_week($course);
+                    $teacherfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
+                    $teachers = \course_info::get_course_tutor($course->id, $teacherfields, $roleIdTeachers);
+                    $courses[$id]->teachers = $teachers;
+                }
+                $users[$index]->courses = array_values($courses);
+            }
         }
 
 
