@@ -32,6 +32,9 @@ use external_value;
 
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
+require_once($CFG->dirroot . "/grade/querylib.php");
+require_once($CFG->libdir . '/gradelib.php');
+require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
 
 class get_user_info extends external_api {
 
@@ -45,9 +48,11 @@ class get_user_info extends external_api {
         return new external_function_parameters(
             [
                 'filter' => new external_value(PARAM_TEXT, 'Filter', VALUE_DEFAULT, ''),
-                'getCourses' => new external_value(PARAM_BOOL, 'Get courses', VALUE_DEFAULT, false),
-                'roleIdStudents' => new external_value(PARAM_INT, 'Student role id', VALUE_DEFAULT, 0),
-                'roleIdTeachers' => new external_value(PARAM_INT, 'Teacher role id', VALUE_DEFAULT, 0),
+                'getCourses' => new external_value(PARAM_INT, 'Get courses', VALUE_DEFAULT, 0),
+                'roleIdStudents' =>  new external_multiple_structure(
+                    new external_value(PARAM_INT, 'Role ids tutors', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, []),
+                'roleIdTeachers' =>  new external_multiple_structure(
+                    new external_value(PARAM_INT, 'Role ids others', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, [])
             ]
         );
     }
@@ -57,9 +62,9 @@ class get_user_info extends external_api {
      *
      * @throws invalid_parameter_exception
      * @param string $filter
-     * @param bool $getcourses
-     * @param int $roleidstudents
-     * @param int $roleidteachers
+     * @param int $getcourses
+     * @param array $roleidstudents
+     * @param array $roleidteachers
      * @return array An array of arrays
      * @since Moodle 2.2
      */
@@ -77,7 +82,6 @@ class get_user_info extends external_api {
         $roleIdStudents = !empty($params['roleIdStudents']) ? $params['roleIdStudents'] : [];
         $roleIdTeachers = !empty($params['roleIdTeachers']) ? $params['roleIdTeachers'] : [];
 
-
         $sql = "SELECT id, firstname as firstName, lastname as lastName, email
                   FROM {user}
                  WHERE CONCAT(firstname, ' ', lastname, ' ', email) LIKE '%$filter%'";
@@ -90,6 +94,13 @@ class get_user_info extends external_api {
             }
             $users = $DB->get_records_sql($sql);
         }
+        $contextlvl = CONTEXT_COURSE;
+        if (!empty($roleIdStudents)) {
+            [$insql, $inparams] = $DB->get_in_or_equal($roleIdStudents);
+        } else {
+            $insql = '<> ?';
+            $inparams = [0];
+        }
 
         if ($getCourses) {
             $fields = 'c.id, c.shortname as shortName, c.fullname as fullName, c.startdate as startDate, c.enddate as endDate';
@@ -97,10 +108,10 @@ class get_user_info extends external_api {
                       FROM {course} c
                       JOIN {context} ctx ON ctx.instanceid = c.id
                       JOIN {role_assignments} ra ON ra.contextid = ctx.id
-                     WHERE ra.userid = ? AND ra.roleid = ?";
-
+                     WHERE ctx.contextlevel = $contextlvl
+                       AND ra.userid = ? AND ra.roleid $insql";
             foreach ($users as $index => $user) {
-                $courses = $DB->get_records_sql($sql, [$user->id, $roleIdStudents]);
+                $courses = $DB->get_records_sql($sql, array_merge([$user->id], $inparams));
                 foreach ($courses as $id => $course) {
                     $courses[$id]->grade = grade_get_course_grade($user->id, $course->id);
                     $courses[$id]->currentWeek = format_uvirtual_get_course_current_week($course);

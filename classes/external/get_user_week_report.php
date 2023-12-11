@@ -24,7 +24,6 @@
 
 namespace local_uvirtual\external;
 
-use core_reportbuilder\local\aggregation\count;
 use external_api;
 use external_function_parameters;
 use external_multiple_structure;
@@ -94,8 +93,8 @@ class get_user_week_report extends external_api {
         $activities = \course_info::get_course_activities($course->id, false, true, false)['activities'];
         $contpend = \course_info::get_course_activities($course->id, false, false, true)['activities'];
         $activities = array_merge($activities, $contpend);
-        $activitycontext = format_uvirtual_get_context_for_mod($activities);
-        $sections = format_uvirtual_get_sections_context($activitycontext, $course, $week);
+        $activitycontext = format_uvirtual_get_context_for_mod($activities, false, false);
+        [$sections, $finalgrade] = format_uvirtual_get_sections_context($activitycontext, $course, $week);
         $weeks = [];
         $modmappings = [
             'tracked_lecture' => 'readings',
@@ -121,7 +120,7 @@ class get_user_week_report extends external_api {
             $totalgrade += $week['gradeWeek'];
         }
         $response['weeks'] = $weeks;
-        $response['totalGrade'] = $totalgrade;
+        $response['totalGrade'] = $finalgrade;
 
         return json_encode($response);
     }
