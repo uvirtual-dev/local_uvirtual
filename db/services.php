@@ -104,6 +104,13 @@ $functions = [
         'description' => '',
         'type' => 'read'
     ],
+    'local_uvirtual_get_user_week_report' => [
+        'classname' => 'local_uvirtual\external\get_user_week_report',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => '',
+        'type' => 'read'
+    ]
 ];
 
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
@@ -121,7 +128,8 @@ $services = [
                 'local_uvirtual_get_filtered_courses_info',
                 'local_uvirtual_get_user_course_info',
                 'local_uvirtual_get_courses_count_info',
-                'local_uvirtual_get_courses_basic_info'
+                'local_uvirtual_get_courses_basic_info',
+                'local_uvirtual_get_user_week_report'
             ],
             'restrictedusers' => 0,
             'enabled' => 1,

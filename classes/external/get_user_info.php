@@ -32,6 +32,9 @@ use external_value;
 
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
+require_once($CFG->dirroot . "/grade/querylib.php");
+require_once($CFG->libdir . '/gradelib.php');
+require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
 
 class get_user_info extends external_api {
 
@@ -45,6 +48,11 @@ class get_user_info extends external_api {
         return new external_function_parameters(
             [
                 'filter' => new external_value(PARAM_TEXT, 'Filter', VALUE_DEFAULT, ''),
+                'getCourses' => new external_value(PARAM_INT, 'Get courses', VALUE_DEFAULT, 0),
+                'roleIdStudents' =>  new external_multiple_structure(
+                    new external_value(PARAM_INT, 'Role ids tutors', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, []),
+                'roleIdTeachers' =>  new external_multiple_structure(
+                    new external_value(PARAM_INT, 'Role ids others', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, [])
             ]
         );
     }
@@ -53,19 +61,26 @@ class get_user_info extends external_api {
      * Return the categories tree.
      *
      * @throws invalid_parameter_exception
-     * @param array $coursetype Course type to filter
-     * @param array $studentid Student id to filter
+     * @param string $filter
+     * @param int $getcourses
+     * @param array $roleidstudents
+     * @param array $roleidteachers
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($filter) {
+    public static function execute($filter, $getcourses, $roleidstudents, $roleidteachers) {
         global $DB;
         $params = [
             'filter'  => $filter,
+            'getCourses' => $getcourses,
+            'roleIdStudents' => $roleidstudents,
+            'roleIdTeachers' => $roleidteachers,
         ];
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $filter = !empty($params['filter']) ? $params['filter'] : '';
-
+        $getCourses = !empty($params['getCourses']) ? $params['getCourses'] : false;
+        $roleIdStudents = !empty($params['roleIdStudents']) ? $params['roleIdStudents'] : [];
+        $roleIdTeachers = !empty($params['roleIdTeachers']) ? $params['roleIdTeachers'] : [];
 
         $sql = "SELECT id, firstname as firstName, lastname as lastName, email
                   FROM {user}
@@ -78,6 +93,34 @@ class get_user_info extends external_api {
                 $sql .=  " OR CONCAT(firstname, ' ', lastname, ' ', email) LIKE '%$word%'";
             }
             $users = $DB->get_records_sql($sql);
+        }
+        $contextlvl = CONTEXT_COURSE;
+        if (!empty($roleIdStudents)) {
+            [$insql, $inparams] = $DB->get_in_or_equal($roleIdStudents);
+        } else {
+            $insql = '<> ?';
+            $inparams = [0];
+        }
+
+        if ($getCourses) {
+            $fields = 'c.id, c.shortname as shortName, c.fullname as fullName, c.startdate as startDate, c.enddate as endDate';
+            $sql = "SELECT $fields
+                      FROM {course} c
+                      JOIN {context} ctx ON ctx.instanceid = c.id
+                      JOIN {role_assignments} ra ON ra.contextid = ctx.id
+                     WHERE ctx.contextlevel = $contextlvl
+                       AND ra.userid = ? AND ra.roleid $insql";
+            foreach ($users as $index => $user) {
+                $courses = $DB->get_records_sql($sql, array_merge([$user->id], $inparams));
+                foreach ($courses as $id => $course) {
+                    $courses[$id]->grade = grade_get_course_grade($user->id, $course->id);
+                    $courses[$id]->currentWeek = format_uvirtual_get_course_current_week($course);
+                    $teacherfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
+                    $teachers = \course_info::get_course_tutor($course->id, $teacherfields, $roleIdTeachers);
+                    $courses[$id]->teachers = $teachers;
+                }
+                $users[$index]->courses = array_values($courses);
+            }
         }
 
 
