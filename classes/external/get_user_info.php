@@ -113,11 +113,11 @@ class get_user_info extends external_api {
             foreach ($users as $index => $user) {
                 $courses = $DB->get_records_sql($sql, array_merge([$user->id], $inparams));
                 foreach ($courses as $id => $course) {
-                    $courses[$id]->grade = grade_get_course_grade($user->id, $course->id);
-                    $courses[$id]->currentWeek = format_uvirtual_get_course_current_week($course);
+                    $courses[$id]->grade = grade_get_course_grade($user->id, $course->id)->grade;
+                    $courses[$id]->currentWeek = format_uvirtual_get_course_current_week($course)[0];
                     $teacherfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
                     $teachers = \course_info::get_course_tutor($course->id, $teacherfields, $roleIdTeachers);
-                    $courses[$id]->teachers = $teachers;
+                    $courses[$id]->teachers = array_values($teachers);
                 }
                 $users[$index]->courses = array_values($courses);
             }

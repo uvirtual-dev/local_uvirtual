@@ -52,7 +52,11 @@ class get_user_week_report extends external_api {
             [
                 'studentId' => new external_value(PARAM_INT, 'Student ID', VALUE_REQUIRED),
                 'courseId' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED),
-                'week' => new external_value(PARAM_INT, 'Week number', VALUE_DEFAULT, 0)
+                'week' => new external_value(PARAM_INT, 'Week number', VALUE_DEFAULT, 0),
+                'roleIdStudents' =>  new external_multiple_structure(
+                    new external_value(PARAM_INT, 'Role ids tutors', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, []),
+                'roleIdTeachers' =>  new external_multiple_structure(
+                    new external_value(PARAM_INT, 'Role ids others', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, [])
             ]
         );
     }
@@ -64,20 +68,26 @@ class get_user_week_report extends external_api {
      * @param int $coursetype Course type to filter
      * @param int $studentid Student id to filter
      * @param int $week Student id to filter
+     * @param array $roleidstudents
+     * @param array $roleidteachers
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($studentid, $courseid, $week) {
+    public static function execute($studentid, $courseid, $week, $roleidstudents, $roleidteachers) {
         global $DB;
         $params = [
             'courseId'  => $courseid,
             'studentId'  => $studentid,
-            'week' => 0
+            'week' => 0,
+            'roleIdStudents' => $roleidstudents,
+            'roleIdTeachers' => $roleidteachers
         ];
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $courseid = $params['courseId'];
         $studentid = $params['studentId'];
         $week = $params['week'];
+        $roleidstudents = $params['roleIdStudents'];
+        $roleidteachers = $params['roleIdTeachers'];
 
         $response = [];
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
@@ -86,9 +96,9 @@ class get_user_week_report extends external_api {
         $response['shortName'] = $course->shortname;
         $response['startDate'] = $course->startdate;
         $response['endDate'] = $course->enddate;
-        $response['currentWeek'] = format_uvirtual_get_course_current_week($course);
+        $response['currentWeek'] = format_uvirtual_get_course_current_week($course)[0];
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
-        $response['teachers'] = \course_info::get_course_tutor($course->id, $teachersfields);
+        $response['teachers'] = \course_info::get_course_tutor($course->id, $teachersfields, $roleidteachers);
         $activities = [];
         $activities = \course_info::get_course_activities($course->id, false, true, false)['activities'];
         $contpend = \course_info::get_course_activities($course->id, false, false, true)['activities'];
@@ -96,16 +106,19 @@ class get_user_week_report extends external_api {
         $activitycontext = format_uvirtual_get_context_for_mod($activities, false, false);
         [$sections, $finalgrade] = format_uvirtual_get_sections_context($activitycontext, $course, $week);
         $weeks = [];
+        
         $modmappings = [
             'tracked_lecture' => 'readings',
             'video_class' => 'videoCapsules',
             'gradable_quiz' => 'formativeAssessments',
-            'gradable_assign' => 'learningChallenge',
+            'gradable_assign' => 'assignments',
         ];
         $totalgrade = 0;
         foreach ($sections as $section) {
-            $week = ['week' => $section['num'], 'startDate' => $section['datestart'], 'endDate' => $section['dateend']];
-            $week['gradeWeek'] = 0;
+            $startunixtime = strtotime($section['datestart']);
+            $endunixtime = strtotime($section['dateend']);
+            $week = ['week' => $section['num'], 'startDate' => $startunixtime, 'endDate' => $endunixtime];
+            $week['gradeWeek'] = 0.00;
             foreach ($section['activities'] as $activity) {
                 if (!isset($modmappings[$activity['uvid']])) {
                     $week[$modmappings[$activity['uvid']]] = [$activity];
