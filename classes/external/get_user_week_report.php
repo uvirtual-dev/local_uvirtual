@@ -98,7 +98,11 @@ class get_user_week_report extends external_api {
         $response['endDate'] = $course->enddate;
         $response['currentWeek'] = format_uvirtual_get_course_current_week($course)[0];
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
-        $response['teachers'] = \course_info::get_course_tutor($course->id, $teachersfields, $roleidteachers);
+        $response['teachers'] = array_values(\course_info::get_course_tutor($course->id, $teachersfields, $roleidteachers));
+        foreach ($response['teachers'] as $key => $teacher) {
+            $response['teachers'][$key]->img = self::get_user_picture($teacher->id);
+
+        }
         $activities = [];
         $activities = \course_info::get_course_activities($course->id, false, true, false)['activities'];
         $contpend = \course_info::get_course_activities($course->id, false, false, true)['activities'];
@@ -120,14 +124,12 @@ class get_user_week_report extends external_api {
             $week = ['week' => $section['num'], 'startDate' => $startunixtime, 'endDate' => $endunixtime];
             $week['gradeWeek'] = 0.00;
             foreach ($section['activities'] as $activity) {
-                if (!isset($modmappings[$activity['uvid']])) {
-                    $week[$modmappings[$activity['uvid']]] = [$activity];
+                if (!isset($week[$modmappings[$activity['id']]])) {
+                    $week[$modmappings[$activity['id']]] = [$activity];
                 } else {
-                    $week[$modmappings[$activity['uvid']]][] = $activity;
+                    $week[$modmappings[$activity['id']]][] = $activity;
                 }
-                if ((float)($activity['grade']) > 0) {
-                    $week['gradeWeek'] += (float)$activity['grade'];
-                }
+                $week['gradeWeek'] += (float)$activity['grade'];
             }
             $weeks[] = $week;
             $totalgrade += $week['gradeWeek'];
@@ -146,5 +148,18 @@ class get_user_week_report extends external_api {
      */
     public static function execute_returns() {
         return new external_value(PARAM_TEXT, 'JSON object', VALUE_OPTIONAL);
+    }
+
+    public static function get_user_picture($userid) {
+        global $PAGE;
+        if (empty($PAGE->context)) {
+            $syscontext = \context_system::instance();
+            $PAGE->set_context($syscontext);
+        }
+        $users = \user_get_users_by_id([$userid]);
+        $user = reset($users);
+        $user_picture = new \user_picture($user);
+        $picurl = $user_picture->get_url($PAGE)->out(false);
+        return $picurl;
     }
 }
