@@ -115,10 +115,16 @@ class get_user_info extends external_api {
                 foreach ($courses as $id => $course) {
                     $courses[$id]->grade = grade_get_course_grade($user->id, $course->id)->grade;
                     $courses[$id]->currentWeek = format_uvirtual_get_course_current_week($course)[0];
+                    $userlastacces = $DB->get_record('user_lastaccess', ['userid' => $user->id, 'courseid' => $course->id]);
+                    $courses[$id]->lastAccess = $userlastacces->timeaccess;
                     $teacherfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
-                    $teachers = \course_info::get_course_tutor($course->id, $teacherfields, $roleIdTeachers);
-                    $courses[$id]->teachers = array_values($teachers);
+                    $teachers = array_values(\course_info::get_course_tutor($course->id, $teacherfields, $roleIdTeachers));
+                    foreach ($teachers as $key => $teacher) {
+                        $teachers[$key]->img = self::get_user_picture($teacher->id);
+                    }
+                    $courses[$id]->teachers = $teachers;
                 }
+                $users[$index]->img = self::get_user_picture($user->id);
                 $users[$index]->courses = array_values($courses);
             }
         }
@@ -135,5 +141,18 @@ class get_user_info extends external_api {
      */
     public static function execute_returns() {
         return new external_value(PARAM_TEXT, 'JSON object', VALUE_OPTIONAL);
+    }
+
+    public static function get_user_picture($userid) {
+        global $PAGE;
+        if (empty($PAGE->context)) {
+            $syscontext = \context_system::instance();
+            $PAGE->set_context($syscontext);
+        }
+        $users = \user_get_users_by_id([$userid]);
+        $user = reset($users);
+        $user_picture = new \user_picture($user);
+        $picurl = $user_picture->get_url($PAGE)->out(false);
+        return $picurl;
     }
 }
