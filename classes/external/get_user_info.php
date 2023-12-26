@@ -109,7 +109,8 @@ class get_user_info extends external_api {
                       JOIN {context} ctx ON ctx.instanceid = c.id
                       JOIN {role_assignments} ra ON ra.contextid = ctx.id
                      WHERE ctx.contextlevel = $contextlvl
-                       AND ra.userid = ? AND ra.roleid $insql";
+                       AND ra.userid = ? AND ra.roleid $insql
+                       ORDER BY c.startdate DESC";
             foreach ($users as $index => $user) {
                 $courses = $DB->get_records_sql($sql, array_merge([$user->id], $inparams));
                 foreach ($courses as $id => $course) {
