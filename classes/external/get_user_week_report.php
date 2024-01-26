@@ -106,8 +106,9 @@ class get_user_week_report extends external_api {
         $activities = [];
         $activities = \course_info::get_course_activities($course->id, false, true, false)['activities'];
         $contpend = \course_info::get_course_activities($course->id, false, false, true)['activities'];
-        $activities = array_merge($activities, $contpend);
-        $activitycontext = format_uvirtual_get_context_for_mod($activities, false, false);
+        $activities = format_uvirtual_get_context_for_mod($activities, false, true);
+        $contpend = format_uvirtual_get_context_for_mod($contpend, false, false);
+        $activitycontext = array_merge($activities, $contpend);
         [$sections, $finalgrade] = format_uvirtual_get_sections_context($activitycontext, $course, $week);
         $weeks = [];
         
@@ -119,9 +120,7 @@ class get_user_week_report extends external_api {
         ];
         $totalgrade = 0;
         foreach ($sections as $section) {
-            $startunixtime = strtotime($section['datestart']);
-            $endunixtime = strtotime($section['dateend']);
-            $week = ['week' => $section['num'], 'startDate' => $startunixtime, 'endDate' => $endunixtime];
+            $week = ['week' => $section['num'], 'startDate' => $section['unixstart'], 'endDate' => $section['unixend']];
             $week['gradeWeek'] = 0.00;
             foreach ($section['activities'] as $activity) {
                 if (!isset($week[$modmappings[$activity['id']]])) {
@@ -135,7 +134,7 @@ class get_user_week_report extends external_api {
             $totalgrade += $week['gradeWeek'];
         }
         $response['weeks'] = $weeks;
-        $response['totalGrade'] = $finalgrade;
+        $response['totalGrade'] = grade_get_course_grade($studentid, $courseid)->grade;
 
         return json_encode($response);
     }
