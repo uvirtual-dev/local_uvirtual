@@ -34,6 +34,7 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->libdir . '/gradelib.php');
 require_once($CFG->dirroot . "/grade/querylib.php");
+require_once($CFG->dirroot . "/local/uvirtual/lib.php");
 
 require_once($CFG->dirroot . "/blocks/grade_overview/classes/course_info.php");
 require_once($CFG->dirroot . "/blocks/grade_overview/classes/grade_management.php");
@@ -106,31 +107,22 @@ class get_user_week_report extends external_api {
         $activities = [];
         $activities = \course_info::get_course_activities($course->id, false, true, false)['activities'];
         $contpend = \course_info::get_course_activities($course->id, false, false, true)['activities'];
-        $activities = format_uvirtual_get_context_for_mod($activities, false, true, false, $studentid);
+        $activities = format_uvirtual_get_context_for_mod($activities, false, true);
         $contpend = format_uvirtual_get_context_for_mod($contpend, false, false);
         $activitycontext = array_merge($activities, $contpend);
-        [$sections, $finalgrade] = format_uvirtual_get_sections_context($activitycontext, $course, $week);
+        [$sections, $finalgrade] = format_uvirtual_get_sections_context($activitycontext, $course, false);
         $weeks = [];
-        
-        $modmappings = [
-            'tracked_lecture' => 'readings',
-            'video_class' => 'videoCapsules',
-            'gradable_quiz' => 'formativeAssessments',
-            'gradable_assign' => 'assignments',
-        ];
+
         $totalgrade = 0;
+      
         foreach ($sections as $section) {
             $week = ['week' => $section['num'], 'startDate' => $section['unixstart'], 'endDate' => $section['unixend']];
             $week['gradeWeek'] = 0.00;
-            foreach ($section['activities'] as $activity) {
-                if (!isset($week[$modmappings[$activity['id']]])) {
-                    $week[$modmappings[$activity['id']]] = [$activity];
-                } else {
-                    $week[$modmappings[$activity['id']]][] = $activity;
-                }
-                $week['gradeWeek'] += (float)$activity['grade'];
-            }
-            $weeks[] = $week;
+            $activies = local_uvirtual_get_activities_by_uvid($section['activities']);
+
+            $activies->startDate = strval($section['unixstart']);
+            $activies->startEnd = strval($section['unixend']);
+            $weeks[] = $activies;
             $totalgrade += $week['gradeWeek'];
         }
         $response['weeks'] = $weeks;
