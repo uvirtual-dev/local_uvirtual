@@ -107,7 +107,7 @@ class get_user_week_report extends external_api {
         $activities = [];
         $activities = \course_info::get_course_activities($course->id, false, true, false)['activities'];
         $contpend = \course_info::get_course_activities($course->id, false, false, true)['activities'];
-        $activities = format_uvirtual_get_context_for_mod($activities, false, true);
+        $activities = format_uvirtual_get_context_for_mod($activities, false, true, false, $studentid);
         $contpend = format_uvirtual_get_context_for_mod($contpend, false, false);
         $activitycontext = array_merge($activities, $contpend);
         [$sections, $finalgrade] = format_uvirtual_get_sections_context($activitycontext, $course, false);
