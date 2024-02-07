@@ -17,4 +17,4 @@ jobs:
           server: ${{ secrets.SERVER_PROD}}
           username: ${{ secrets.USER_PROD}}
           password: ${{ secrets.PASS_PROD}}
-          server-dir: /public_html/local/uvirtual
+          server-dir: /public_html/local/uvirtual/
