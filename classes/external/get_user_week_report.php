@@ -54,9 +54,9 @@ class get_user_week_report extends external_api {
                 'studentId' => new external_value(PARAM_INT, 'Student ID', VALUE_REQUIRED),
                 'courseId' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED),
                 'week' => new external_value(PARAM_INT, 'Week number', VALUE_DEFAULT, 0),
-                'roleIdStudents' =>  new external_multiple_structure(
+                'roleIdsStudents' =>  new external_multiple_structure(
                     new external_value(PARAM_INT, 'Role ids tutors', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, []),
-                'roleIdTeachers' =>  new external_multiple_structure(
+                'roleIdsTeachers' =>  new external_multiple_structure(
                     new external_value(PARAM_INT, 'Role ids others', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, [])
             ]
         );
@@ -80,15 +80,15 @@ class get_user_week_report extends external_api {
             'courseId'  => $courseid,
             'studentId'  => $studentid,
             'week' => 0,
-            'roleIdStudents' => $roleidstudents,
-            'roleIdTeachers' => $roleidteachers
+            'roleIdsStudents' => $roleidstudents,
+            'roleIdsTeachers' => $roleidteachers
         ];
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $courseid = $params['courseId'];
         $studentid = $params['studentId'];
         $week = $params['week'];
-        $roleidstudents = $params['roleIdStudents'];
-        $roleidteachers = $params['roleIdTeachers'];
+        $roleidstudents = $params['roleIdsStudents'];
+        $roleidteachers = $params['roleIdsTeachers'];
 
         $response = [];
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
