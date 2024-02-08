@@ -67,13 +67,13 @@ function local_uvirtual_get_activities_by_uvid($activities) {
     $formativeAssessments = [];
     $assignment = [];
     foreach ($activities as $activity) {
-        if ($activity['uvid'] == 'gradable_quiz') {
+        if ($activity['uvid'] == 'gradable_quiz' || ($activity['uvid'] == 'gradable_assign' && trim($activity['name']) !== 'Reto de Aprendizaje')) {
             $formativeAssessments[] = $activity;
         } else if ($activity['uvid'] == 'tracked_lecture') {
             $readings[] = $activity;
         } else if ($activity['uvid'] == 'video_class') {
             $videoCapsules[] = $activity;
-        } else if ($activity['uvid'] == 'gradable_assign') {
+        } else if ($activity['uvid'] == 'gradable_assign' && trim($activity['name']) == 'Reto de Aprendizaje') {
             $assignment[] = $activity;
         }
         if (!isset($week[$modmappings[$activity['id']]])) {

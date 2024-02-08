@@ -92,11 +92,21 @@ class get_user_week_report extends external_api {
 
         $response = [];
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
-        $response['courseId'] = $course->id;
-        $response['courseName'] = $course->fullname;
-        $response['shortName'] = $course->shortname;
-        $response['startDate'] = $course->startdate;
-        $response['endDate'] = $course->enddate;
+        $student = $DB->get_record('user', ['id' => $studentid], '*', MUST_EXIST);
+
+        $response['course'] = [
+            'courseId' => (int)$course->id,    
+            'courseName' => $course->fullname,
+            'shortName' => $course->shortname,
+            'startDate' => $course->startdate,
+            'endDate' => $course->enddate
+        ];
+        $response['student'] = [
+            'studentId' => (int)$student->id,    
+            'email' => $student->email,
+            'firstName' => $student->firstname,
+            'lastName' => $student->lastname
+        ];
         $response['currentWeek'] = format_uvirtual_get_course_current_week($course)[0];
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
         $response['teachers'] = array_values(\course_info::get_course_tutor($course->id, $teachersfields, $roleidteachers));
@@ -105,8 +115,8 @@ class get_user_week_report extends external_api {
 
         }
         $activities = [];
-        $activities = \course_info::get_course_activities($course->id, false, true, false, $studentid)['activities'];
-        $contpend = \course_info::get_course_activities($course->id, false, false, true, $studentid)['activities'];
+        $activities = \course_info::get_course_activities($course->id, false, true, false)['activities'];
+        $contpend = \course_info::get_course_activities($course->id, false, false, true)['activities'];
         $activities = format_uvirtual_get_context_for_mod($activities, false, true, false, $studentid);
         $contpend = format_uvirtual_get_context_for_mod($contpend, false, false, false, $studentid);
         $activitycontext = array_merge($activities, $contpend);
@@ -116,6 +126,7 @@ class get_user_week_report extends external_api {
         $totalgrade = 0;
       
         foreach ($sections as $section) {
+            // mtrace(print_r($section), true);
             $week = ['week' => $section['num'], 'startDate' => $section['unixstart'], 'endDate' => $section['unixend']];
             $week['gradeWeek'] = 0.00;
             $activies = local_uvirtual_get_activities_by_uvid($section['activities']);
@@ -126,7 +137,8 @@ class get_user_week_report extends external_api {
             $totalgrade += $week['gradeWeek'];
         }
         $response['weeks'] = $weeks;
-        $response['totalGrade'] = grade_get_course_grade($studentid, $courseid)->grade;
+        $totalGrade = (float)grade_get_course_grade($studentid, $courseid)->grade;
+        $response['totalGrade'] = number_format($totalGrade, 2, '.', '');
 
         return json_encode($response);
     }
