@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use invalid_parameter_exception;
+
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
 
@@ -91,3 +93,54 @@ function local_uvirtual_get_activities_by_uvid($activities) {
 
     return $activiesResult;
 }
+
+function local_uvirtual_get_data_previous_and_next_courses($courseid) {
+    global $DB;
+
+        $course = $DB->get_record('course', ['id' => $courseid]);
+
+      
+        if (!isset($course->id)) {
+            throw new invalid_parameter_exception('El curso no existe en la base de datos.');
+        }
+            
+        
+        $sql = "SELECT * FROM {course} WHERE category = :categoryid AND enddate < :startdate ORDER BY startdate DESC LIMIT 1";
+        
+        $params = array('categoryid' => $course->category, 'startdate' => $course->startdate);
+
+        $coursePrevious = $DB->get_record_sql($sql, $params);
+
+        $sql = "SELECT * FROM {course} WHERE category = :categoryid AND startdate > :enddate ORDER BY startdate ASC ";
+        
+        $params = array('categoryid' => $course->category, 'enddate' => $course->enddate);
+
+        $courseNext = $DB->get_record_sql($sql, $params);
+      
+        $response = new stdClass();
+
+        $coursePreviousData = new stdClass();
+        $courseNextData = new stdClass();
+      
+        $coursePreviousData = local_uvirtual_get_data_course($coursePrevious);
+        $courseNextData = local_uvirtual_get_data_course($courseNext);
+
+        $response->coursePrevios = $coursePreviousData ;
+        $response->courseNext = $courseNextData;
+
+    return $response;
+
+}
+
+function local_uvirtual_get_data_course($course) {
+    
+    $courseData = new stdClass();
+    $courseData->id = $course->id; 
+    $courseData->shortname = $course->shortname; 
+    $courseData->fullname = $course->fullname; 
+    $courseData->startdate = $course->startdate; 
+    $courseData->enddate = $course->enddate; 
+
+    return $courseData;
+}
+
