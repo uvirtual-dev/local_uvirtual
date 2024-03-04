@@ -139,7 +139,6 @@ class get_user_course_info extends external_api {
         }
         $user = reset(user_get_users_by_id([$studentid]));
         $response['student'] = [
-            'id' => $user->id,
             'firstname' => $user->firstname,
             'lastname' => $user->lastname,
             'email' => $user->email
