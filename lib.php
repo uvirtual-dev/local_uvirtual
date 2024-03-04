@@ -97,26 +97,65 @@ function local_uvirtual_get_activities_by_uvid($activities) {
 function local_uvirtual_get_data_previous_and_next_courses($courseid) {
     global $DB;
 
-        $course = $DB->get_record('course', ['id' => $courseid]);
+        $currentCourse = $DB->get_record('course', ['id' => $courseid]);
 
       
-        if (!isset($course->id)) {
+        if (!isset($currentCourse->id)) {
             throw new invalid_parameter_exception('El curso no existe en la base de datos.');
         }
+        $coursePrevious = '';
+        $courseNext = '';   
+        
+        if ( strlen($currentCourse->shortname) == 11) {
+            $sql = "SELECT * FROM {course} WHERE category = :categoryid AND enddate < :startdate ORDER BY startdate DESC LIMIT 1";
+        
+            $params = array('categoryid' => $currentCourse->category, 'startdate' => $currentCourse->startdate);
+
+            $coursePrevious = $DB->get_record_sql($sql, $params);
+
+            $sql = "SELECT * FROM {course} WHERE category = :categoryid AND startdate > :enddate ORDER BY startdate ASC LIMIT 1";
             
-        
-        $sql = "SELECT * FROM {course} WHERE category = :categoryid AND enddate < :startdate ORDER BY startdate DESC LIMIT 1";
-        
-        $params = array('categoryid' => $course->category, 'startdate' => $course->startdate);
+            $params = array('categoryid' => $currentCourse->category, 'enddate' => $currentCourse->enddate);
 
-        $coursePrevious = $DB->get_record_sql($sql, $params);
+            $courseNext = $DB->get_record_sql($sql, $params);
 
-        $sql = "SELECT * FROM {course} WHERE category = :categoryid AND startdate > :enddate ORDER BY startdate ASC ";
+           
+        } else {
+
+            $courseGroup = substr($currentCourse->shortname, -1);
+            
+            //Para el caso del curso previo
+            $sql = "SELECT * FROM {course} WHERE category = :categoryid AND enddate < :startdate ORDER BY startdate DESC";
         
-        $params = array('categoryid' => $course->category, 'enddate' => $course->enddate);
+            $params = array('categoryid' => $currentCourse->category, 'startdate' => $currentCourse->startdate);
+            
+            $coursesPrevious = $DB->get_records_sql($sql, $params);
 
-        $courseNext = $DB->get_record_sql($sql, $params);
-      
+            foreach ($coursesPrevious as $course) {
+               
+                if (substr($course->shortname, -1) == $courseGroup)
+                {
+                    $coursePrevious = $course;
+                    break ;
+                 }
+            }
+
+            //Para el caso de los cursos próximos
+            $sql = "SELECT * FROM {course} WHERE category = :categoryid AND startdate > :enddate ORDER BY startdate ASC";
+            
+            $params = array('categoryid' => $currentCourse->category, 'enddate' => $currentCourse->enddate);
+
+            $coursesNext = $DB->get_records_sql($sql, $params);
+           
+            foreach ($coursesNext as $course) {
+                if (substr($course->shortname, -1) == $courseGroup)
+                 {
+                    $courseNext = $course;
+                    break ;
+                 }
+            }
+        }
+        
         $response = new stdClass();
 
         $coursePreviousData = new stdClass();
