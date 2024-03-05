@@ -104,7 +104,10 @@ function local_uvirtual_get_data_previous_and_next_courses($courseid) {
             throw new invalid_parameter_exception('El curso no existe en la base de datos.');
         }
         $coursePrevious = '';
-        $courseNext = '';   
+        $courseNext = '';
+        
+        $currentCategory = $DB->get_record('course_categories', ['id' => $currentCourse->category]);
+
         
         if ( strlen($currentCourse->shortname) == 11) {
             $sql = "SELECT * FROM {course} WHERE category = :categoryid AND enddate < :startdate ORDER BY startdate DESC LIMIT 1";
@@ -161,8 +164,8 @@ function local_uvirtual_get_data_previous_and_next_courses($courseid) {
         $coursePreviousData = new stdClass();
         $courseNextData = new stdClass();
       
-        $coursePreviousData = local_uvirtual_get_data_course($coursePrevious);
-        $courseNextData = local_uvirtual_get_data_course($courseNext);
+        $coursePreviousData = local_uvirtual_get_data_course($coursePrevious, $currentCategory);
+        $courseNextData = local_uvirtual_get_data_course($courseNext, $currentCategory);
 
         $response->coursePrevios = $coursePreviousData ;
         $response->courseNext = $courseNextData;
@@ -171,15 +174,16 @@ function local_uvirtual_get_data_previous_and_next_courses($courseid) {
 
 }
 
-function local_uvirtual_get_data_course($course) {
+function local_uvirtual_get_data_course($course, $currentCategory) {
     
     $courseData = new stdClass();
     $courseData->id = $course->id; 
     $courseData->shortname = $course->shortname; 
     $courseData->fullname = $course->fullname; 
     $courseData->startdate = $course->startdate; 
-    $courseData->enddate = $course->enddate; 
+    $courseData->enddate = $course->enddate;
+    $courseData->categoryid = $currentCategory->id; 
+    $courseData->categoryname = $currentCategory->name; 
 
     return $courseData;
 }
-
