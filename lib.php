@@ -25,7 +25,7 @@
 use invalid_parameter_exception;
 
 defined('MOODLE_INTERNAL') || die();
-
+require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
 
 function local_uvirtual_get_users_count($year = null) {
 
@@ -54,6 +54,44 @@ function local_uvirtual_get_users_count($year = null) {
     $respose['detail'] = array_values($usercount);;
 
     return $respose;
+}
+
+function local_uvirtual_get_activities_by_uvid($activities) {
+    $modmappings = [
+        'tracked_lecture' => 'readings',
+        'video_class' => 'videoCapsules',
+        'gradable_quiz' => 'formativeAssessments',
+        'gradable_assign' => 'assignments',
+    ];
+    $activiesResult = new stdClass();
+    $readings = [];
+    $videoCapsules = [];
+    $formativeAssessments = [];
+    $assignment = [];
+    foreach ($activities as $activity) {
+        if ($activity['uvid'] == 'gradable_quiz' || ($activity['uvid'] == 'gradable_assign' && trim($activity['name']) !== 'Reto de Aprendizaje')) {
+            $formativeAssessments[] = $activity;
+        } else if ($activity['uvid'] == 'tracked_lecture') {
+            $readings[] = $activity;
+        } else if ($activity['uvid'] == 'video_class') {
+            $videoCapsules[] = $activity;
+        } else if ($activity['uvid'] == 'gradable_assign' && trim($activity['name']) == 'Reto de Aprendizaje') {
+            $assignment[] = $activity;
+        }
+        if (!isset($week[$modmappings[$activity['id']]])) {
+            $week[$modmappings[$activity['id']]] = [$activity];
+        } else {
+            $week[$modmappings[$activity['id']]][] = $activity;
+        }
+        $week['gradeWeek'] += (float)$activity['grade'];
+    }
+    $activiesResult->readings = $readings;
+    $activiesResult->videoCapsules = $videoCapsules;
+    $activiesResult->formativeAssessments = $formativeAssessments;
+    $activiesResult->assignment = $assignment;
+    $activiesResult->gradeWeek = $week['gradeWeek'];
+
+    return $activiesResult;
 }
 
 function local_uvirtual_get_data_previous_and_next_courses($courseid) {
