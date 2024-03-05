@@ -85,6 +85,8 @@ class get_previous_and_next_courses extends external_api {
                 'fullname' => new external_value(PARAM_TEXT, 'Nombre completo del curso'),
                 'startdate' => new external_value(PARAM_INT, 'Fecha de inicio del curso'),
                 'enddate' => new external_value(PARAM_INT, 'Fecha de finalización del curso'),
+                'categoryid' => new external_value(PARAM_INT, 'ID de la categoría del curso'),
+                'categoryname' => new external_value(PARAM_TEXT, 'Nombre de la categoría del curso'),
             ]),
             'courseNext' => new external_single_structure([  // Use external_single_structure para un solo objeto
                 'id' => new external_value(PARAM_INT, 'ID del curso'),
@@ -92,6 +94,8 @@ class get_previous_and_next_courses extends external_api {
                 'fullname' => new external_value(PARAM_TEXT, 'Nombre completo del curso'),
                 'startdate' => new external_value(PARAM_INT, 'Fecha de inicio del curso'),
                 'enddate' => new external_value(PARAM_INT, 'Fecha de finalización del curso'),
+                'categoryid' => new external_value(PARAM_INT, 'ID de la categoría del curso'),
+                'categoryname' => new external_value(PARAM_TEXT, 'Nombre de la categoría del curso'),
             ]),
         ]);
     }
