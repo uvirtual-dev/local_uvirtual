@@ -36,7 +36,7 @@ class change_session_zoom_format_uvirtual extends \core\task\scheduled_task {
      */
     public function execute() {
 
-        local_uvirtual_update_vc_task()
+        local_uvirtual_update_vc_task();
         
         
         
