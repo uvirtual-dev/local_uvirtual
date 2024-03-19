@@ -13,19 +13,32 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+namespace local_uvirtual\task;
 
-/**
- * Plugin version information.
- *
- * @package     local_uvirtual
- * @copyright   2022 Oscar Nadjar <oscar.nadjar@uvirtual.org>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+require_once($CFG->dirroot . '/course/format/uvirtual/lib.php');
+
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_uvirtual';
-$plugin->release = '3.11';
-$plugin->version = 20240313002;
-$plugin->requires = 2020110900;
-$plugin->maturity = MATURITY_ALPHA;
+class change_session_zoom_format_uvirtual extends \core\task\scheduled_task {
+
+    /**
+     * Name for this task.
+     *
+     * @return string
+     */
+    public function get_name() {
+        return 'Cambiar sesion de zoom de acuerdo a campos de video conferencia';
+    }
+
+    /**
+     * Run task for loading keycloak userids into user profile.
+     */
+    public function execute() {
+
+        local_uvirtual_update_vc_task()
+        
+        
+        
+    }
+}

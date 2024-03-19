@@ -187,3 +187,36 @@ function local_uvirtual_get_data_course($course, $currentCategory) {
 
     return $courseData;
 }
+
+function local_uvirtual_update_vc_task(){
+    
+    global $DB;
+    $sql = "SELECT id, fullname as name, shortname as shortName, startdate as startDate, enddate as endDate FROM {course}";
+
+    $courses = $DB->get_records_sql($sql);
+    $ahora = time();
+    foreach($courses as $course){
+        $format = \course_get_format($course->id);
+        $formatname = $format->get_format();
+        $itemId = 1;
+        $vcs = format_uvirtual_get_dates_vcs($course->id);
+        if ($formatname == 'uvirtual' && $ahora > $course->startdate && $ahora < $course->enddate) {
+            $dbman = $DB->get_manager();
+            
+            $instanceId = $DB->get_field('course_modules', 'instance', ['course' => $course->id, 'idnumber' => $itemId]);
+            if($dbman->table_exists('zoom')){
+                $startdatesession = $DB->get_record('zoom', ['id' => $instanceId]);
+                echo "start date session zoom: <br>";
+                echo $startdatesession->start_time;
+                foreach($vcs as $vc){
+                    echo "info vc: <br>";
+                    print_r($vc);
+                    if($startdatesession < $vc->startsession){
+                        $DB->update_record('zoom', (object)['id' => $instanceId, 'start_time' => $vc->startsession, 'end_date_time' => $vc->endsession]);
+                    }
+                }
+                
+            }
+        }
+    }
+}
