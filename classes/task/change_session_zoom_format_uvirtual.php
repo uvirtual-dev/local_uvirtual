@@ -59,6 +59,7 @@ class change_session_zoom_format_uvirtual extends \core\task\scheduled_task {
                 foreach($vcs as $vc){
                     mtrace("Entra a vcs");
                     if($zoomsession->start_time < $vc['startsession'] && $week > $vc['startsession']){
+                        mtrace("Se validó fecha de sesion de vc");
                         $zoomsession->start_time = $vc['startsession'];
                         $zoomsession->end_date_time = $vc['endsession'];
 
