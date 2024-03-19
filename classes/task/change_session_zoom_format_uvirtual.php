@@ -44,7 +44,7 @@ class change_session_zoom_format_uvirtual extends \core\task\scheduled_task {
     
     
     foreach($courses as $course){
-        mtrace("Se encutran el curso " . $course->fullname);
+        mtrace("Se encuentra el curso " . $course->name);
         $format = \course_get_format($course->id);
         $formatname = $format->get_format();
         $itemId = 1;
@@ -57,7 +57,7 @@ class change_session_zoom_format_uvirtual extends \core\task\scheduled_task {
                 $zoomsession = $DB->get_record('zoom', ['id' => $instanceId]);
                 $week = strtotime('+7 days' , $zoomsession->start_time );
                 foreach($vcs as $vc){
-                    mtrace("Entra a vcs");
+                    mtrace("Entra a vcs con fecha zoom: $zoomsession->start_time  vs vc: $vc['startsession'] ");
                     if($zoomsession->start_time < $vc['startsession'] && $week > $vc['startsession']){
                         mtrace("Se validó fecha de sesion de vc");
                         $zoomsession->start_time = $vc['startsession'];
