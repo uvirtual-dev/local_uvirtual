@@ -32,35 +32,40 @@ class change_session_zoom_format_uvirtual extends \core\task\scheduled_task {
     }
 
     /**
-     * Run task for loading keycloak userids into user profile.
+     * Run task for update session vc zoom.
      */
     public function execute() {
 
         global $DB;
     $sql = "SELECT id, fullname as name, shortname as shortName, startdate as startDate, enddate as endDate FROM {course}";
-
+    mtrace("Comienza update vc zoom...");
     $courses = $DB->get_records_sql($sql);
     $ahora = time();
+    
+    
     foreach($courses as $course){
+        mtrace("Se encutran el curso " . $course->fullname);
         $format = \course_get_format($course->id);
         $formatname = $format->get_format();
         $itemId = 1;
         $vcs = format_uvirtual_get_dates_vcs($course->id);
         if ($formatname == 'uvirtual' && $ahora > $course->startdate && $ahora < $course->enddate) {
             $dbman = $DB->get_manager();
-            
+            mtrace("Está activo y con el formato uvirtual...");
             $instanceId = $DB->get_field('course_modules', 'instance', ['course' => $course->id, 'idnumber' => $itemId]);
             if($dbman->table_exists('zoom')){
                 $zoomsession = $DB->get_record('zoom', ['id' => $instanceId]);
                 $week = strtotime('+7 days' , $zoomsession->start_time );
                 foreach($vcs as $vc){
-                    
+                    mtrace("Entra a vcs");
                     if($zoomsession->start_time < $vc['startsession'] && $week > $vc['startsession']){
                         $zoomsession->start_time = $vc['startsession'];
                         $zoomsession->end_date_time = $vc['endsession'];
 
-                        $DB->update_record('zoom', $zoomsession);
-                        
+                        $sql = $DB->update_record('zoom', $zoomsession);
+                        if($sql){
+                            mtrace("Se actualizó session de zoom");
+                        }
                         
                         
                     }
@@ -70,7 +75,7 @@ class change_session_zoom_format_uvirtual extends \core\task\scheduled_task {
         }
     }
         
-        
+    mtrace("Finaliza update vc zoom...");   
         
     }
 }
