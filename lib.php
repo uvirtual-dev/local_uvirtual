@@ -205,14 +205,18 @@ function local_uvirtual_update_vc_task(){
             
             $instanceId = $DB->get_field('course_modules', 'instance', ['course' => $course->id, 'idnumber' => $itemId]);
             if($dbman->table_exists('zoom')){
-                $startdatesession = $DB->get_record('zoom', ['id' => $instanceId]);
-                echo "start date session zoom: <br>";
-                echo $startdatesession->start_time;
+                $zoomsession = $DB->get_record('zoom', ['id' => $instanceId]);
+                $week = strtotime('+7 days' , $zoomsession->start_time );
                 foreach($vcs as $vc){
-                    echo "info vc: <br>";
-                    print_r($vc);
-                    if($startdatesession < $vc->startsession){
-                        $DB->update_record('zoom', (object)['id' => $instanceId, 'start_time' => $vc->startsession, 'end_date_time' => $vc->endsession]);
+                    
+                    if($zoomsession->start_time < $vc['startsession'] && $week > $vc['startsession']){
+                        $zoomsession->start_time = $vc['startsession'];
+                        $zoomsession->end_date_time = $vc['endsession'];
+
+                        $DB->update_record('zoom', $zoomsession);
+                        
+                        
+                        
                     }
                 }
                 
