@@ -37,7 +37,7 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->dirroot . "/blocks/grade_overview/classes/course_info.php");
 require_once($CFG->dirroot . "/course/format/lib.php");
-
+require_once($CFG->dirroot . "/local/uvirtual/lib.php");
 
 class get_courses_basic_info extends external_api {
 
@@ -53,6 +53,8 @@ class get_courses_basic_info extends external_api {
                 'typeCourse' => new external_value(PARAM_TEXT, 'uvirtual course type', VALUE_DEFAULT, ''),
                 'roleIdsTeachers' =>  new external_multiple_structure(
                     new external_value(PARAM_TEXT, 'Role ids tutors', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, []),
+                'roleIdsStudents' =>  new external_multiple_structure(
+                        new external_value(PARAM_TEXT, 'Role ids students', VALUE_DEFAULT, ''), 'Students Ids', VALUE_DEFAULT, []),    
                 'activeCourses' => new external_value(PARAM_BOOL, 'active', VALUE_DEFAULT, 0),
                 'timeFilter' => new external_value(PARAM_INT, 'Filter', VALUE_DEFAULT, 0),
                 'nextCourses' => new external_value(PARAM_BOOL, 'Filters courses starting 3 month on the future', VALUE_DEFAULT, 0)
@@ -69,11 +71,12 @@ class get_courses_basic_info extends external_api {
      * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($typecourse, $roleidstutors, $activecourses, $timefilter, $nextcourses) {
+    public static function execute($typecourse, $roleidstutors, $roleidsstudents, $activecourses, $timefilter, $nextcourses) {
         global $DB;
         $params = [
             'typeCourse'  => $typecourse,
             'roleIdsTeachers' => $roleidstutors,
+            'roleIdsStudents' => $roleidsstudents,
             'activeCourses' => $activecourses,
             'timeFilter' => $timefilter,
             'nextCourses' => $nextcourses
@@ -81,6 +84,7 @@ class get_courses_basic_info extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $typeCourse = $params['typeCourse'];
         $roleidstutors = $params['roleIdsTeachers'];
+        $roleidsstudents = $params['roleIdsStudents'];
         $activecourses = $params['activeCourses'];
         $timefilter = $params['timeFilter'];
         $nextcourses = $params['nextCourses'];
@@ -113,13 +117,34 @@ class get_courses_basic_info extends external_api {
             $coursesinfo = self::filter_courses_by_type($courses, $typeCourse);
         }
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
+
+        
         foreach ($coursesinfo as $courseid => $courseinfo) {
-            $coursesinfo[$courseid]->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields, $roleidstutors));           
+            // $coursesinfo[$courseid]->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields, $roleidstutors));           
+            $teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields, $roleidstutors));           
+            $newArrayTeacher = [];
+            foreach ($teachers as $teacher) {
+            $pictureUrl = local_uvirtual_get_picture_profile_for_template($teacher); 
+            $newArrayTeacher[] =[
+                "id"=> $teacher->id,
+                "firstname"=> $teacher->firstname,
+                "lastname"=> $teacher->lastname,
+                "email"=> $teacher->email,
+                "imgprofile"=> $pictureUrl,
+            ]; 
+            }
+            $coursesinfo[$courseid]->teachers = $newArrayTeacher;
+           
+            $studentsfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, ul.timeaccess as lastAccess, gg.finalgrade as grade';
+            $studentsEnrollments = array_values(course_info::get_course_students($courseid, 0 ,$studentsfields, $roleidsstudents));
+            $courseinfo->students = count($studentsEnrollments);
+
             $ahora = time();
             if ($ahora > $courseinfo->startdate && $ahora < $courseinfo->enddate) {
                 $format = \course_get_format($courseinfo->id);
                 $formatname = $format->get_format();
                 if ($formatname == 'weeks' || $formatname == 'uvirtual') {
+                   
                     $sections = $format->get_sections();
                     foreach ($sections as $section) {
                         $date = $format->get_section_dates($section);

@@ -34,5 +34,14 @@ $tasks = array(
         'day' => '*',
 		'month' => '*',
 		'dayofweek' => '*',
+    ),
+    array(
+        'classname' => '\local_uvirtual\task\change_session_zoom_format_uvirtual',
+        'blocking' => 0,
+        'minute' => '5',
+        'hour' => '*',
+        'day' => '*',
+		'month' => '*',
+		'dayofweek' => '*',
     )
 );

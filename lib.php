@@ -26,6 +26,7 @@ use invalid_parameter_exception;
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
+require_once($CFG->dirroot . '/user/lib.php');
 
 function local_uvirtual_get_users_count($year = null) {
 
@@ -186,4 +187,14 @@ function local_uvirtual_get_data_course($course, $currentCategory) {
     $courseData->categoryname = $currentCategory->name; 
 
     return $courseData;
+}
+
+function local_uvirtual_get_picture_profile_for_template($user){
+    global $PAGE;
+ 
+    $userpicture = new \user_picture($user);
+    $userpicture->size = 1;
+    $pictureUrl = $userpicture->get_url($PAGE)->out(false);
+
+     return $pictureUrl;
 }

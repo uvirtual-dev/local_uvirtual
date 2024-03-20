@@ -117,6 +117,13 @@ $functions = [
         'ajax' => true,
         'description' => 'Permite obtener el curso previo y siguiente de un curso en específico y que se encuentren en la misma categoría.',
         'type' => 'read'
+    ],
+    'local_uvirtual_set_user_preferences' => [
+        'classname' => 'local_uvirtual\external\set_user_preferences',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => 'Configura las preferencias de usuario',
+        'type' => 'read'
     ]
 ];
 
@@ -137,7 +144,8 @@ $services = [
                 'local_uvirtual_get_courses_count_info',
                 'local_uvirtual_get_courses_basic_info',
                 'local_uvirtual_get_user_week_report',
-                'local_uvirtual_get_previous_and_next_courses'
+                'local_uvirtual_get_previous_and_next_courses',
+                'local_uvirtual_set_user_preferences'
             ],
             'restrictedusers' => 0,
             'enabled' => 1,
