@@ -58,7 +58,7 @@ class change_session_zoom_format_uvirtual extends \core\task\scheduled_task {
                 $week = strtotime('+6 days' , $zoomsession->start_time );
                 foreach($vcs as $vc){
                     mtrace("Entra a vcs con fecha zoom: " . $zoomsession->start_time . "  vs vc: " . $vc['startsession'] . " vs week: " . $week);
-                    if($zoomsession->start_time < $vc['startsession'] && $week > $vc['startsession']){
+                    if($zoomsession->start_time < $vc['startsession'] && $week < $vc['startsession']){
                         mtrace("Se validó fecha de sesion de vc");
                         $zoomsession->start_time = $vc['startsession'];
                         $zoomsession->end_date_time = $vc['endsession'];
