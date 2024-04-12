@@ -17,5 +17,15 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
+    $settings = new admin_settingpage('local_uvirtual', get_string('pluginname', 'local_uvirtual'),);
 
+    // Agregar una configuración de texto.
+    $settings->add(new admin_setting_configtext(
+        'local_uvirtual/urlsysacad',
+        get_string('texturlsysacad', 'local_uvirtual'),
+        get_string('texturlsysacad_desc', 'local_uvirtual'),
+        'default value',
+        PARAM_TEXT
+    ));
+    $ADMIN->add('localplugins', $settings);
 }
