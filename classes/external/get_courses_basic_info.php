@@ -134,7 +134,10 @@ class get_courses_basic_info extends external_api {
             ]; 
             }
             $coursesinfo[$courseid]->teachers = $newArrayTeacher;
-           
+
+            $courseprogram = json_decode(local_uvirtual_identify_course_program($courseinfo->shortname));
+            $coursesinfo[$courseid]->programid = $courseprogram->idprograma;
+            
             $studentsfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, ul.timeaccess as lastAccess, gg.finalgrade as grade';
             $studentsEnrollments = array_values(course_info::get_course_students($courseid, 0 ,$studentsfields, $roleidsstudents));
             $courseinfo->students = count($studentsEnrollments);

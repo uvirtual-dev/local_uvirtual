@@ -198,3 +198,42 @@ function local_uvirtual_get_picture_profile_for_template($user){
 
      return $pictureUrl;
 }
+
+function local_uvirtual_identify_course_program($shortname) {
+
+    if (empty($shortname)) {
+        throw new Exception('Error en los parámetros enviados, contacte a soporte');
+    }
+
+    $pluginconfig = get_config('local_uvirtual');
+    $configvalue = $pluginconfig->urlsysacad;
+   
+    if (empty($configvalue)) {
+        throw new Exception('No se configuró la url base del backend del sistema académico, contacte a soporte');
+    }
+
+    $url = $configvalue . "/api/v1/materias/getItem/sigla/{$shortname}";
+    
+    $ch = curl_init($url);
+
+    curl_setopt($ch, CURLOPT_HTTPGET, true);
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    try {
+        $result = curl_exec($ch);
+
+        if ($result === false) {
+            throw new Exception('Error en la solicitud cURL: ' . curl_error($ch));
+        }
+
+        $data = json_decode($result, true);
+    } catch (Exception $e) {
+        throw new Exception('Error al comunicarse con el servicio web: ' . $e->getMessage());
+    } finally {
+        curl_close($ch);
+    }
+
+    return json_encode($data);
+}
+
