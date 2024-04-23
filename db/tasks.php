@@ -47,7 +47,7 @@ $tasks = array(
     array(
         'classname' => '\local_uvirtual\task\send_remember_es_format_uvirtual',
         'blocking' => 0,
-        'minute' => '30',
+        'minute' => '0,30',
         'hour' => '*',
         'day' => '*',
 		'month' => '*',
