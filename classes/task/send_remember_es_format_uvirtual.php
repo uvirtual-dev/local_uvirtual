@@ -103,6 +103,8 @@ class send_remember_es_format_uvirtual extends \core\task\scheduled_task {
                                 $mailobject->subject = "Recordatorio de encuentro síncrono - ".$course->shortname;
                                 $mailobject->body = $html;
                                 block_grade_overview_send_email($mailobject);
+                                $mensaje = ' Se envía mail -> ' . $course->shortname . " -> " . $student->email;
+                                mtrace($mensaje);
                             }
                         }
                     } 
