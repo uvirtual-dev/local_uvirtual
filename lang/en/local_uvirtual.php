@@ -44,4 +44,8 @@ $string['subm'] = 'Enviado';
 $string['notsubm'] = 'No enviado';
 $string['viewed'] = 'Visto';
 $string['notviewed'] = 'Por ver';
+$string['texturlsysacad'] = 'Url de sistema académico';
+$string['texturlsysacad_desc'] = 'Configure la url para el servicio web de sistema académico';
+$string['texturlsysacad'] = 'Url de sistema académico';
+$string['texturlsysacad_desc'] = 'Configure la url para el servicio web de sistema académico';
 

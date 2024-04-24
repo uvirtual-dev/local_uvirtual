@@ -34,3 +34,5 @@ $string['messageprovider:welcomemessage'] = '
 $string['messageprovider:welcomemessage:subject'] = 'Cuenta campus virtual';
 $string['successupdate'] = 'El usuario ha sido actualizado exitosamente';
 $string['mycourses'] = 'Mis asignaturas';
+$string['texturlsysacad'] = 'Url de sistema académico';
+$string['texturlsysacad_desc'] = 'Configure la url para el servicio web de sistema académico';
