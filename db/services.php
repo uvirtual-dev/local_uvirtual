@@ -110,7 +110,21 @@ $functions = [
         'ajax' => true,
         'description' => 'Permite obtener el curso previo y siguiente de un curso en específico y que se encuentren en la misma categoría.',
         'type' => 'read'
-    ]
+    ],
+    'local_uvirtual_block_user' => [
+        'classname' => 'local_uvirtual\external',
+        'methodname' => 'block_user',
+        'ajax' => true,
+        'description' => '',
+        'type' => 'write',
+    ],
+    'local_uvirtual_unblock_user' => [
+        'classname' => 'local_uvirtual\external',
+        'methodname' => 'unblock_user',
+        'ajax' => true,
+        'description' => '',
+        'type' => 'write',
+    ],
 ];
 
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
@@ -129,7 +143,9 @@ $services = [
                 'local_uvirtual_get_user_course_info',
                 'local_uvirtual_get_courses_count_info',
                 'local_uvirtual_get_courses_basic_info',
-                'local_uvirtual_get_previous_and_next_courses'
+                'local_uvirtual_get_previous_and_next_courses',
+                'local_uvirtual_block_user',
+                'local_uvirtual_unblock_user',
             ],
             'restrictedusers' => 0,
             'enabled' => 1,
