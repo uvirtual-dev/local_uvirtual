@@ -726,4 +726,73 @@ class external extends external_api {
         $response = json_encode($usercount);
         return $response;
     }
+
+    /**
+     * Block users by email and course ID.
+     *
+     * @param string $email The email of the user to block.
+     * @param int $courseId The ID of the course.
+     * @return bool True if the user was successfully blocked, false otherwise.
+     * @since Moodle 2.2
+     */
+    public static function block_user($email) {
+        
+        return local_uvirtual_change_role($email, 'student', 'studbloq');
+         
+    }
+
+    /**
+     * Returns description of method parameters.
+     *
+     * @return external_function_parameters
+     * @since Moodle 2.2
+     */
+    public static function block_user_parameters() {
+        return new external_function_parameters([
+            'email' => new external_value(PARAM_EMAIL, 'The email of the user to block.'),
+           
+        ]);
+    }
+
+    public static function block_user_returns() {
+        return new external_single_structure(
+            array(
+                'success' => new external_value(PARAM_BOOL, 'True if the user was successfully blocked'),
+            )
+        );
+    }
+
+    /**
+     * Unblock users by email and course ID.
+     *
+     * @param string $email The email of the user to unblock.
+     * @param int $courseId The ID of the course.
+     * @return bool True if the user was successfully unblocked, false otherwise.
+     * @since Moodle 2.2
+     */
+    public static function unblock_user($email) {
+    
+        return local_uvirtual_change_role($email, 'studbloq', 'student');
+    }
+
+    /**
+     * Returns description of method parameters.
+     *
+     * @return external_function_parameters
+     * @since Moodle 2.2
+     */
+    public static function unblock_user_parameters() {
+        return new external_function_parameters([
+            'email' => new external_value(PARAM_EMAIL, 'The email of the user to unblock.'),
+            
+        ]);
+    }
+
+    public static function unblock_user_returns() {
+        return new external_single_structure(
+            array(
+                'success' => new external_value(PARAM_BOOL, 'True if the user was successfully blocked'),
+            )
+        );
+    }
 }
