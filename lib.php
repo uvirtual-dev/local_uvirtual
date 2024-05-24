@@ -212,7 +212,7 @@ function local_uvirtual_identify_course_program($shortname) {
         throw new Exception('No se configuró la url base del backend del sistema académico, contacte a soporte');
     }
 
-    $url = $configvalue . "/api/v1/materias/getItem/sigla/{$shortname}";
+    $url = $configvalue . "/api/v1/prog-materias/getItem/sigla/{$shortname}";
     
     $ch = curl_init($url);
 
@@ -235,5 +235,78 @@ function local_uvirtual_identify_course_program($shortname) {
     }
 
     return json_encode($data);
+}
+
+function local_uvirtual_change_role($email, $rolename, $newrolename) {
+    global $DB, $CFG;
+
+    require_once($CFG->dirroot.'/user/profile/lib.php'); 
+
+    // Obtén el ID del rol que quieres quitar.
+    $roleid = $DB->get_field('role', 'id', array('shortname' => $rolename));
+
+    // Obtén el ID del usuario al que quieres asignar el rol.
+    $userid = $DB->get_field('user', 'id', array('email' => $email));
+
+    // Obtén el ID del rol que quieres asignar.
+    $newroleid = $DB->get_field('role', 'id', array('shortname' => $newrolename));
+
+    //Obtener el id de todos los cursos donde esta inscrito el usuario buscando por userid
+
+    $sql = "SELECT c.id FROM {course} c
+            INNER JOIN {context} ctx ON c.id = ctx.instanceid
+            INNER JOIN {role_assignments} ra ON ctx.id = ra.contextid
+            INNER JOIN {user} u ON ra.userid = u.id
+            WHERE u.id = :userid AND c.id != 2";
+
+    $params = array('userid' => $userid);
+    $courseids = $DB->get_records_sql($sql, $params);
+
+    foreach($courseids as $course){
+        $context = \context_course::instance($course->id);
+        $user = $DB->get_record('user', ['id' => $userid]);
+        $role = $DB->get_record('role', ['id' => $roleid]);
+
+        if (!isset($context)) {
+            throw new invalid_parameter_exception('El contexto no existe en la base de datos.');
+            return [ 'success' => false];
+        }
+
+        if (!isset($user)) {
+            throw new invalid_parameter_exception('El usuario no existe en la base de datos.');
+            return [ 'success' => false];
+        }
+
+        if (!isset($role)) {
+            throw new invalid_parameter_exception('El rol no existe en la base de datos.');
+            return [ 'success' => false];
+        }
+
+        // Quita el rol al usuario en el curso.
+        role_unassign($roleid, $userid, $context->id);
+        
+        // Asigna el rol al usuario en el curso.
+        role_assign($newroleid, $userid, $context->id);
+    }
+
+    profile_load_custom_fields($user); 
+
+     //suspender o activar usuario depende del rol
+    if ($newrolename == 'student') {
+        $user->suspended = 0;
+        // Actualizar campo personalizado de usuario (profile_field), student_bloq dependiendo del rol
+        $user->profile_field_student_bloq = 0;
+
+    } else {
+        $user->suspended = 1;
+        $user->profile_field_student_bloq = 1;
+    }
+   
+    profile_save_data($user);
+
+    $DB->update_record('user', $user);
+
+    return [ 'success' => true];
+
 }
 

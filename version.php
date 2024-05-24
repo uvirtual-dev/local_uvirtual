@@ -26,6 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_uvirtual';
 $plugin->release = '3.11';
-$plugin->version = 20240412000;
+$plugin->version = 20240503000;
 $plugin->requires = 2020110900;
 $plugin->maturity = MATURITY_ALPHA;
