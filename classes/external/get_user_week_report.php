@@ -130,6 +130,20 @@ class get_user_week_report extends external_api {
             $week = ['week' => $section['num'], 'startDate' => $section['unixstart'], 'endDate' => $section['unixend']];
             $week['gradeWeek'] = 0.00;
             $activies = local_uvirtual_get_activities_by_uvid($section['activities']);
+            foreach ($activies as $key => $activy) {
+                foreach($activy as $key => $act){
+                    
+                    if($act['type'] === 'assign' ){
+                        [$status, $grade, $maxgrade] = format_uvirtual_mod_status($act, true, $studentid);
+                        $act['statusvalue'] = $status;
+                        $act['status'] = self::get_status_name($status, $grade);
+                        
+                    }
+                   
+                }
+               
+                
+            }
 
             $activies->startDate = strval($section['unixstart']);
             $activies->startEnd = strval($section['unixend']);
@@ -165,4 +179,14 @@ class get_user_week_report extends external_api {
         $picurl = $user_picture->get_url($PAGE)->out(false);
         return $picurl;
     }
+
+    public static function get_status_name($status,$grade){
+        if($grade === "0.00"){
+            return 'No calificado';
+        } else {
+            return 'Calificado';
+        }
+    }
+
+ 
 }
