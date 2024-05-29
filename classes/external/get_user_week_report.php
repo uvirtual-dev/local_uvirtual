@@ -131,8 +131,8 @@ class get_user_week_report extends external_api {
             $week = ['week' => $section['num'], 'startDate' => $section['unixstart'], 'endDate' => $section['unixend']];
             $week['gradeWeek'] = 0.00;
             $activies = local_uvirtual_get_activities_by_uvid($section['activities']);
-            foreach ($activies as $key => $activy) {
-                foreach($activy as $key => $act){
+            foreach ($activies as $key => &$activy) {
+                foreach($activy as $key => &$act){
                     
                     if($act['type'] === 'assign' || $act['type'] === 'quiz'){
                         
