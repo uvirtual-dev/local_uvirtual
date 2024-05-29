@@ -24,6 +24,7 @@
 
 namespace local_uvirtual\external;
 
+use block_rss_client\output\item;
 use external_api;
 use external_function_parameters;
 use external_multiple_structure;
@@ -133,12 +134,12 @@ class get_user_week_report extends external_api {
             foreach ($activies as $key => $activy) {
                 foreach($activy as $key => $act){
                     
-                    if($act['type'] === 'assign' ){
-                        [$status, $grade, $maxgrade] = format_uvirtual_mod_status($act, true, $studentid);
-                        $act['statusvalue'] = $status;
-                        $act['status'] = self::get_status_name($status, $grade);
+                    if($act['type'] === 'assign' || $act['type'] === 'quiz'){
                         
+                        $act['status'] = self::get_status($act['instance'], $act['type'], $studentid);
+                    
                     }
+                    
                    
                 }
                
@@ -180,8 +181,13 @@ class get_user_week_report extends external_api {
         return $picurl;
     }
 
-    public static function get_status_name($status,$grade){
-        if($grade === "0.00"){
+    public static function get_status($instance, $type, $studentid){
+        global $DB;
+        $grade_item = $DB->get_field('grade_items', 'id', ['iteminstance' => $instance, 'itemmodule' => $type]);
+        //print_r($grade_item);
+        $grade = $DB->get_field('grade_grades', 'finalgrade', ['itemid' => $grade_item, 'userid' => $studentid]);
+        
+        if($grade === NULL || !$grade){
             return 'No calificado';
         } else {
             return 'Calificado';
