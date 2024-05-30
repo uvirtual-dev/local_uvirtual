@@ -174,7 +174,7 @@ function local_uvirtual_identify_course_program($shortname) {
         throw new Exception('No se configuró la url base del backend del sistema académico, contacte a soporte');
     }
 
-    $url = $configvalue . "/api/prog-materias/getItem/sigla/{$shortname}";
+    $url = $configvalue . "/api/v1/prog-materias/getItem/sigla/{$shortname}";
     
     $ch = curl_init($url);
 
