@@ -118,6 +118,7 @@ class get_user_course_info extends external_api {
             $gradeuser = number_format((float)$gradeitem->grade, 2, '.', '');
             $status = self::get_status($atv['instance'], $atv['type'], $studentid);
             
+            
             $sections[$atv['section']]['activities'][] = [
                 'id' => $atv['id'],
                 'name' => $atv['name'],
