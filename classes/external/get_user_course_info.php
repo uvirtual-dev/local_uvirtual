@@ -92,7 +92,7 @@ class get_user_course_info extends external_api {
         $fullgrade = 0.00;
         $ahora = time();
         $currentweeks = 0.;
-        foreach ($gradableatvs as $atv) {
+        foreach ($gradableatvs as &$atv) {
             $section = $atv['section'];
             $formatname = $format->get_format();
             if ($formatname == 'weeks' || $formatname == 'uvirtual') {
@@ -116,12 +116,14 @@ class get_user_course_info extends external_api {
             $gradeplit =  !empty($gradeitem->str_long_grade) ? explode('/', $gradeitem->str_long_grade) : [0,0];
             $maxgrade =  number_format((float)$gradeplit[1], 2, '.', '');
             $gradeuser = number_format((float)$gradeitem->grade, 2, '.', '');
-
+            $status = self::get_status($atv['instance'], $atv['type'], $studentid);
+            
             $sections[$atv['section']]['activities'][] = [
                 'id' => $atv['id'],
                 'name' => $atv['name'],
                 'type' => $atv['type'],
                 'grade' => $gradeuser,
+                'statusvalue' => $status,
                 'objetive' => $maxgrade,
                 'status' => !empty($gradeitem->datesubmitted) || !empty($gradeitem->dategraded)
            ];
@@ -166,5 +168,18 @@ class get_user_course_info extends external_api {
      */
     public static function execute_returns() {
         return new external_value(PARAM_TEXT, 'JSON object', VALUE_OPTIONAL);
+    }
+
+    public static function get_status($instance, $type, $studentid){
+        global $DB;
+        $grade_item = $DB->get_field('grade_items', 'id', ['iteminstance' => $instance, 'itemmodule' => $type]);
+        //print_r($grade_item);
+        $grade = $DB->get_field('grade_grades', 'finalgrade', ['itemid' => $grade_item, 'userid' => $studentid]);
+        
+        if($grade === NULL || !$grade){
+            return 'No calificado';
+        } else {
+            return 'Calificado';
+        }
     }
 }
