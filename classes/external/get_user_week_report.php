@@ -149,7 +149,7 @@ class get_user_week_report extends external_api {
         }
         $response['weeks'] = $weeks;
         $totalGrade = (float)grade_get_course_grade($studentid, $courseid)->grade;
-        $response['totalGrade'] = number_format($totalGrade, 3, '.', '');
+        $response['totalGrade'] = bcdiv(number_format($totalGrade, 3, '.', ''), '1', 2);
 
         return json_encode($response);
     }
