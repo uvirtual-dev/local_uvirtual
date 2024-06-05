@@ -90,7 +90,7 @@ function local_uvirtual_get_activities_by_uvid($activities) {
     $activiesResult->videoCapsules = $videoCapsules;
     $activiesResult->formativeAssessments = $formativeAssessments;
     $activiesResult->assignment = $assignment;
-    $activiesResult->gradeWeek = $week['gradeWeek'];
+    $activiesResult->gradeWeek = round($week['gradeWeek'], 2);
 
     return $activiesResult;
 }
