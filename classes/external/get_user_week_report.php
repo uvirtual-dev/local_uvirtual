@@ -134,15 +134,13 @@ class get_user_week_report extends external_api {
             
             foreach ($activies as $key => &$activy) {
                 foreach($activy as $key => &$act){
-                    echo "act previo: <br>";
-                    print_r($act);
+                    
                     if($act['type'] === 'assign' || $act['type'] === 'quiz' || ($act['type'] === 'scorm' && $act['uvid'] === 'gradable_quiz')){
                         
                         $act['status'] = self::get_status($act['instance'], $act['type'], $studentid);
                         $act['grade'] = self::get_grade_weight($act,$courseid, $studentid);
                     }
-                    echo "<br>act posterior: <br>";
-                    print_r($act);
+                    
                     
                 }
             }
@@ -209,7 +207,7 @@ class get_user_week_report extends external_api {
         
         if ($gradeplit[1] != $maxgrade && $gradeplit[1] && $gradeplit[1] > 0){
             $coef = $gradeplit[1] / $coef;
-            echo "<br>coef: ".$coef;
+            
         } else if($maxgrade > $coef ){
             $coeftemp = (int)$maxgrade / (int)$coef;
             $maxgrade = $coef;
