@@ -138,7 +138,10 @@ class get_user_week_report extends external_api {
                     if($act['type'] === 'assign' || $act['type'] === 'quiz' || ($act['type'] === 'scorm' && $act['uvid'] === 'gradable_quiz')){
                         
                         $act['status'] = self::get_status($act['instance'], $act['type'], $studentid);
+                        $act['grade'] = self::get_grade_weight($act,$courseid, $studentid);
                     }
+                    
+                    
                 }
             }
 
@@ -188,6 +191,38 @@ class get_user_week_report extends external_api {
         } else {
             return 'Calificado';
         }
+    }
+
+    public static function get_grade_weight($atv, $courseid, $userid){
+        global $DB;
+        //print_r($atv);
+        $gi = $DB->get_record('grade_items', ['courseid' => $courseid, 'iteminstance' => $atv['instance'], 'itemmodule' => $atv['type']]);
+        $maxgrade = (int)$gi->grademax;
+        $coef = $gi->aggregationcoef;
+        
+        $gradeitem = \grade_user_management::get_user_mod_grade($userid, $atv['instance'], $atv['type'], $courseid);
+        
+        $gradeisnull = ($gradeitem->grade);
+        $gradeplit =  !empty($gradeitem->str_long_grade) ? explode('/', $gradeitem->str_long_grade) : [0,0];
+        
+        if ($gradeplit[1] != $maxgrade && $gradeplit[1] && $gradeplit[1] > 0){
+            $coef = $gradeplit[1] / $coef;
+            
+        } else if($maxgrade > $coef ){
+            $coeftemp = (int)$maxgrade / (int)$coef;
+            $maxgrade = $coef;
+            $coef = $coeftemp;
+        } else {
+            $coef = 1;
+        }
+        
+        $maxgrade =  number_format($maxgrade, 2, '.', '');
+        if($coef > 1){
+            $gradeuser = (float)number_format((float)$gradeitem->grade / $coef, 2, '.', '');
+        } else {
+            $gradeuser = (float)number_format((float)$gradeitem->grade, 2, '.', '');
+        }
+        return $gradeuser;
     }
 
  
