@@ -146,7 +146,7 @@ class get_user_info extends external_api {
             $syscontext = \context_system::instance();
             $PAGE->set_context($syscontext);
         }
-        $users = $DB->get_records_list('user', 'id', $userid);;
+        $users = $DB->get_records_list('user', 'id', [$userid]);
         $user = reset($users);
         $user_picture = new \user_picture($user);
         $picurl = $user_picture->get_url($PAGE)->out(false);
