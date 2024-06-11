@@ -141,12 +141,12 @@ class get_user_info extends external_api {
     }
 
     public static function get_user_picture($userid) {
-        global $PAGE;
+        global $PAGE, $DB;
         if (empty($PAGE->context)) {
             $syscontext = \context_system::instance();
             $PAGE->set_context($syscontext);
         }
-        $users = \user_get_users_by_id([$userid]);
+        $users = $DB->get_records_list('user', 'id', $userid);;
         $user = reset($users);
         $user_picture = new \user_picture($user);
         $picurl = $user_picture->get_url($PAGE)->out(false);
