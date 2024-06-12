@@ -124,8 +124,8 @@ class get_course_categories extends external_api {
                 $now = time();
                 $timediference = $course->startdate - $now;
                 $currentactive = $now > $course->startdate && $now < $course->enddate;
-                $futureactive = ($timediference > 0) && ($timediference < DAYSECS*90);
-                if (!($currentactive || $futureactive)) {
+                //$futureactive = ($timediference > 0) && ($timediference < DAYSECS*90);
+                if (!($currentactive)) {
                     continue;
                 }
             }
