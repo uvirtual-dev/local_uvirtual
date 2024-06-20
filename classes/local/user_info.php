@@ -77,9 +77,6 @@ class user_info
         $activities = [];
         $courses = !empty($courseid) ? [get_course($courseid)] : enrol_get_all_users_courses($this->user->id,true);
         foreach ($courses as $course) {
-            if($course->enddate < time() && !$course->visible){
-                continue;
-            }
             $coursedata = \course_info::get_course_activities($course->id, $active, $gradable, $contpend);
 
             if (empty($activities)) {
