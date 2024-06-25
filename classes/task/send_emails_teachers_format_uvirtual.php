@@ -42,7 +42,7 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task {
         $blockconfig = get_config('block_grade_overview');
 
         $ahora = time();
-        $calculodias = 60 * 60 * 24 * 7;
+        $calculodias = 60 * 60 * 24 * 15;
         $stardate = $ahora;
         $enddate = $ahora - $calculodias;
 
