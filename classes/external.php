@@ -727,6 +727,7 @@ class external extends external_api {
         return $response;
     }
 
+    
     /**
      * Block users by email and course ID.
      *
@@ -735,9 +736,9 @@ class external extends external_api {
      * @return bool True if the user was successfully blocked, false otherwise.
      * @since Moodle 2.2
      */
-    public static function block_user($email) {
+    public static function block_user($email,$courses) {
         
-        return local_uvirtual_change_role($email, 'student', 'studbloq');
+        return local_uvirtual_change_role($email, $courses,'student', 'studbloq');
          
     }
 
@@ -750,6 +751,7 @@ class external extends external_api {
     public static function block_user_parameters() {
         return new external_function_parameters([
             'email' => new external_value(PARAM_EMAIL, 'The email of the user to block.'),
+            'courses' => new external_value(PARAM_TEXT, 'Courses ID', VALUE_DEFAULT, '')
            
         ]);
     }
@@ -770,9 +772,9 @@ class external extends external_api {
      * @return bool True if the user was successfully unblocked, false otherwise.
      * @since Moodle 2.2
      */
-    public static function unblock_user($email) {
+    public static function unblock_user($email, $courses) {
     
-        return local_uvirtual_change_role($email, 'studbloq', 'student');
+        return local_uvirtual_change_role($email, $courses, 'studbloq', 'student');
     }
 
     /**
@@ -784,6 +786,7 @@ class external extends external_api {
     public static function unblock_user_parameters() {
         return new external_function_parameters([
             'email' => new external_value(PARAM_EMAIL, 'The email of the user to unblock.'),
+            'courses' => new external_value(PARAM_TEXT, 'Courses ID', VALUE_DEFAULT, '')
             
         ]);
     }
