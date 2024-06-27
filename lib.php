@@ -237,7 +237,7 @@ function local_uvirtual_identify_course_program($shortname) {
     return json_encode($data);
 }
 
-function local_uvirtual_change_role($email, $rolename, $newrolename) {
+function local_uvirtual_change_role($email, $courses, $rolename, $newrolename) {
     global $DB, $CFG;
 
     require_once($CFG->dirroot.'/user/profile/lib.php'); 
@@ -252,19 +252,23 @@ function local_uvirtual_change_role($email, $rolename, $newrolename) {
     $newroleid = $DB->get_field('role', 'id', array('shortname' => $newrolename));
 
     //Obtener el id de todos los cursos donde esta inscrito el usuario buscando por userid
+    
+    $courses = explode(',', $courses);
+    list($insql, $paramsin) = $DB->get_in_or_equal($courses);
+
+    $params = array_merge(array($userid), $paramsin);
 
     $sql = "SELECT c.id FROM {course} c
             INNER JOIN {context} ctx ON c.id = ctx.instanceid
             INNER JOIN {role_assignments} ra ON ctx.id = ra.contextid
             INNER JOIN {user} u ON ra.userid = u.id
-            WHERE u.id = :userid AND c.id != 2";
+            WHERE u.id = ? AND c.shortname $insql";
 
-    $params = array('userid' => $userid);
     $courseids = $DB->get_records_sql($sql, $params);
-
+    $user = $DB->get_record('user', ['id' => $userid]);
     foreach($courseids as $course){
         $context = \context_course::instance($course->id);
-        $user = $DB->get_record('user', ['id' => $userid]);
+        
         $role = $DB->get_record('role', ['id' => $roleid]);
 
         if (!isset($context)) {
@@ -293,12 +297,12 @@ function local_uvirtual_change_role($email, $rolename, $newrolename) {
 
      //suspender o activar usuario depende del rol
     if ($newrolename == 'student') {
-        $user->suspended = 0;
+        //$user->suspended = 0;
         // Actualizar campo personalizado de usuario (profile_field), student_bloq dependiendo del rol
         $user->profile_field_student_bloq = 0;
 
     } else {
-        $user->suspended = 1;
+        //$user->suspended = 1;
         $user->profile_field_student_bloq = 1;
     }
    
