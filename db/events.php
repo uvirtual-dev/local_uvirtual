@@ -21,5 +21,9 @@ $observers = [
     [
         'eventname' => 'core\event\user_created',
         'callback' => 'local_uvirtual\observer::user_created_management',
-    ]
+    ],
+    [
+        'eventname' => '\core\event\user_loggedin',
+        'callback'  => 'local_uvirtual_message_user_blocked',
+    ],
 ];
