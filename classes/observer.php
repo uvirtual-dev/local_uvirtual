@@ -32,4 +32,16 @@ class observer
         $usermanagement = new \new_user_management($userid);
         $usermanagement->send_welcome_email();
     }
+
+    public static function message_user_blocked(\core\event\base $event)
+    {
+        global $USER;
+    
+
+        if ($USER->profile['student_bloq'] == 1){
+            
+            \core\notification::add("¡Acceso bloqueado!", \core\output\notification::NOTIFY_INFO);
+            \core\notification::add("Tome contacto con pagos@usal.uvirtual.org para regularizar sus cuotas vencidas. Si ya pagó su sistema se restablecerá en un tiempo máximo de en 24 hrs hábiles", \core\output\notification::NOTIFY_INFO);
+        }
+    }
 }
