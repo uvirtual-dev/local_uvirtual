@@ -79,11 +79,16 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task {
                     $editingteacherid = array_keys(get_archetype_roles('editingteacher'));
                     $teacherroleids = array_merge($editingteacherid, $teacherid);
                     $teachers = \course_info::get_course_tutor($course->id, 'u.*', array_values($teacherroleids));
+                    $istfm = format_uvirtual_get_course_metadata($course->id , 'Otros campos', 'typecourse', '4' );
 
                     if (!empty($teachers)) {
                         foreach ($teachers as $teacher) {
                             $context = format_uvirtual_get_teacher_pendientes_context($course, $teacher);
-                            if(!format_uvirtual_get_course_metadata($course->id , 'Otros campos', 'typecourse', '4' )){
+                            if($istfm){
+                                if (!$context['assign_tfm']  ) {
+                                    continue;
+                                }
+                            } else {
                                 if (!$context['displayconsultas'] && !$context['displayretos'] ) {
                                     continue;
                                 }
