@@ -83,9 +83,12 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task {
                     if (!empty($teachers)) {
                         foreach ($teachers as $teacher) {
                             $context = format_uvirtual_get_teacher_pendientes_context($course, $teacher);
-                            if (!$context['displayconsultas'] && !$context['displayretos'] || !$context['assign_tfm']) {
-                                continue;
+                            if(!format_uvirtual_get_course_metadata($course->id , 'Otros campos', 'typecourse', '4' )){
+                                if (!$context['displayconsultas'] && !$context['displayretos'] ) {
+                                    continue;
+                                }
                             }
+                            
                             $htmlemail = $OUTPUT->render_from_template('format_uvirtual/email/teachers_email', $context);
                             if (!empty($htmlemail)) {
                                 $htmlemail = str_replace('ú', ' ', $htmlemail);
