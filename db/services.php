@@ -139,6 +139,13 @@ $functions = [
         'description' => '',
         'type' => 'write',
     ],
+    'local_uvirtual_get_filtered_courses_by_date' => [
+        'classname' => 'local_uvirtual\external\get_filtered_courses_by_date',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => 'Obtiene los cursos filtrados por fecha y typo de curso, permite enviar el campo de consulta (enddate, startdate) y el valor de dicho campo en formato timestap',
+        'type' => 'read'
+    ]
 ];
 
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
@@ -161,7 +168,8 @@ $services = [
                 'local_uvirtual_get_previous_and_next_courses',
                 'local_uvirtual_set_user_preferences',
                 'local_uvirtual_block_user',
-                'local_uvirtual_unblock_user'
+                'local_uvirtual_unblock_user',
+                'local_uvirtual_get_filtered_courses_by_date'
             ],
             'restrictedusers' => 0,
             'enabled' => 1,
