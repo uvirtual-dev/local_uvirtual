@@ -118,6 +118,13 @@ $functions = [
         'description' => 'Permite obtener el curso previo y siguiente de un curso en específico y que se encuentren en la misma categoría.',
         'type' => 'read'
     ],
+    'local_uvirtual_set_user_preferences' => [
+        'classname' => 'local_uvirtual\external\set_user_preferences',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => 'Configura las preferencias de usuario',
+        'type' => 'read'
+    ],
     'local_uvirtual_block_user' => [
         'classname' => 'local_uvirtual\external',
         'methodname' => 'block_user',
