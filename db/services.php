@@ -104,11 +104,25 @@ $functions = [
         'description' => '',
         'type' => 'read'
     ],
+    'local_uvirtual_get_user_week_report' => [
+        'classname' => 'local_uvirtual\external\get_user_week_report',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => '',
+        'type' => 'read'
+    ],
     'local_uvirtual_get_previous_and_next_courses' => [
         'classname' => 'local_uvirtual\external\get_previous_and_next_courses',
         'methodname' => 'execute',
         'ajax' => true,
         'description' => 'Permite obtener el curso previo y siguiente de un curso en específico y que se encuentren en la misma categoría.',
+        'type' => 'read'
+    ],
+    'local_uvirtual_set_user_preferences' => [
+        'classname' => 'local_uvirtual\external\set_user_preferences',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => 'Configura las preferencias de usuario',
         'type' => 'read'
     ],
     'local_uvirtual_block_user' => [
@@ -125,6 +139,13 @@ $functions = [
         'description' => '',
         'type' => 'write',
     ],
+    'local_uvirtual_get_filtered_courses_by_date' => [
+        'classname' => 'local_uvirtual\external\get_filtered_courses_by_date',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => 'Obtiene los cursos filtrados por fecha y typo de curso, permite enviar el campo de consulta (enddate, startdate) y el valor de dicho campo en formato timestap',
+        'type' => 'read'
+    ]
 ];
 
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
@@ -143,9 +164,12 @@ $services = [
                 'local_uvirtual_get_user_course_info',
                 'local_uvirtual_get_courses_count_info',
                 'local_uvirtual_get_courses_basic_info',
+                'local_uvirtual_get_user_week_report',
                 'local_uvirtual_get_previous_and_next_courses',
+                'local_uvirtual_set_user_preferences',
                 'local_uvirtual_block_user',
                 'local_uvirtual_unblock_user',
+                'local_uvirtual_get_filtered_courses_by_date'
             ],
             'restrictedusers' => 0,
             'enabled' => 1,
