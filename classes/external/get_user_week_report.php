@@ -38,7 +38,6 @@ require_once($CFG->dirroot . "/local/uvirtual/lib.php");
 
 require_once($CFG->dirroot . "/blocks/grade_overview/classes/course_info.php");
 require_once($CFG->dirroot . "/blocks/grade_overview/classes/grade_management.php");
-require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
 
 class get_user_week_report extends external_api {
 
