@@ -92,7 +92,7 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task
                 // Iterate over the roles and get the role id
                 foreach ($roles as $role) {
                     $role_db = $DB->get_record('role', ['shortname' => $role]);
-                    $teacherid[] = (int)$role_db->id;
+                    $teacherid[] = $role_db->id;
                 }
 
                 // Iterate over the courses
@@ -106,6 +106,7 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task
                      * */
 
                     $teachers = course_info::get_course_tutor($course->id, 'u.*', array_values($teacherid));
+
                     $istfm = format_uvirtual_get_course_metadata($course->id, 'Otros campos', 'typecourse', '4');
 
                     if (!empty($teachers)) {
