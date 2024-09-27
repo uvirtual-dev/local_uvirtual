@@ -83,12 +83,29 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task
                 $mensaje = ' Envio de correos de informes profesores comenzando...';
                 mtrace($mensaje);
 
+                // Set the roles to search for
+                $roles = ['teacher', 'editingteacher', 'noeditingteacher', 'noeditingteachersecondary'];
+
+                // Get the role ids
+                $teacherid = [];
+
+                // Iterate over the roles and get the role id
+                foreach ($roles as $role) {
+                    $role_db = $DB->get_record('role', ['shortname' => $role]);
+                    $teacherid[] = (int)$role_db->id;
+                }
+
+                // Iterate over the courses
                 foreach ($courses as $course) {
-                    $teacherid = array_keys(get_archetype_roles('teacher'));
-                    $editingteacherid = array_keys(get_archetype_roles('editingteacher'));
-                    $rdirecprogramid = array_keys(get_archetype_roles('rdirecprogram'));
-                    $teacherroleids = array_merge($editingteacherid, $teacherid, $rdirecprogramid);
-                    $teachers = course_info::get_course_tutor($course->id, 'u.*', array_values($teacherroleids));
+
+                    /*
+                     * Deprecated
+                     * $teacherid = array_keys(get_archetype_roles('teacher'));
+                     * $editingteacherid = array_keys(get_archetype_roles('editingteacher'));
+                     * $teacherroleids = array_merge($editingteacherid, $teacherid);
+                     * */
+
+                    $teachers = course_info::get_course_tutor($course->id, 'u.*', array_values($teacherid));
                     $istfm = format_uvirtual_get_course_metadata($course->id, 'Otros campos', 'typecourse', '4');
 
                     if (!empty($teachers)) {
@@ -120,11 +137,11 @@ class send_emails_teachers_format_uvirtual extends \core\task\scheduled_task
                     }
                 }
                 $mensaje = ' Envio de correos de informes profesores finalizando...';
-                mtrace($mensaje);
             } else {
                 $mensaje = ' No hay cursos validos en el rango de fecha actual.';
-                mtrace($mensaje);
             }
+
+            mtrace($mensaje);
 
         } else {
             $mensaje = ' No hay nada para enviar';
