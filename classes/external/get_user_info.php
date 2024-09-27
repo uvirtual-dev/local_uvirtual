@@ -24,11 +24,16 @@
 
 namespace local_uvirtual\external;
 
+use course_info;
 use external_api;
 use external_function_parameters;
 use external_multiple_structure;
-use external_single_structure;
 use external_value;
+use context_system;
+use coding_exception;
+use dml_exception;
+use invalid_parameter_exception;
+use user_picture;
 
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
@@ -36,65 +41,78 @@ require_once($CFG->dirroot . "/grade/querylib.php");
 require_once($CFG->libdir . '/gradelib.php');
 require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
 
-class get_user_info extends external_api {
-
+class get_user_info extends external_api
+{
     /**
      * Returns description of method parameters
      *
      * @return external_function_parameters
      * @since Moodle 2.2
      */
-    public static function execute_parameters() {
-        return new external_function_parameters(
-            [
-                'filter' => new external_value(PARAM_TEXT, 'Filter', VALUE_DEFAULT, ''),
-                'getCourses' => new external_value(PARAM_INT, 'Get courses', VALUE_DEFAULT, 0),
-                'roleIdStudents' =>  new external_multiple_structure(
-                    new external_value(PARAM_INT, 'Role ids tutors', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, []),
-                'roleIdTeachers' =>  new external_multiple_structure(
-                    new external_value(PARAM_INT, 'Role ids others', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, [])
-            ]
-        );
+    public static function execute_parameters(): external_function_parameters
+    {
+        return new external_function_parameters([
+            'filter' => new external_value(PARAM_TEXT, 'Filter', VALUE_DEFAULT, ''),
+            'getCourses' => new external_value(PARAM_INT, 'Get courses', VALUE_DEFAULT, 0),
+            'roleIdStudents' => new external_multiple_structure(
+                new external_value(PARAM_INT, 'Role ids tutors', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, []),
+            'roleIdTeachers' => new external_multiple_structure(
+                new external_value(PARAM_INT, 'Role ids others', VALUE_DEFAULT, 0), 'Roles Ids', VALUE_DEFAULT, [])
+        ]);
     }
 
     /**
-     * Return the categories tree.
+     * Execute the service
      *
+     * @param $filter
+     * @param $getcourses
+     * @param $roleidstudents
+     * @param $roleidteachers
+     * @return string
+     * @throws coding_exception
+     * @throws dml_exception
      * @throws invalid_parameter_exception
-     * @param string $filter
-     * @param int $getcourses
-     * @param array $roleidstudents
-     * @param array $roleidteachers
-     * @return array An array of arrays
-     * @since Moodle 2.2
      */
-    public static function execute($filter, $getcourses, $roleidstudents, $roleidteachers) {
+    public static function execute($filter, $getcourses, $roleidstudents, $roleidteachers): string
+    {
         global $DB;
+
+        // Set params
         $params = [
-            'filter'  => $filter,
+            'filter' => $filter,
             'getCourses' => $getcourses,
             'roleIdStudents' => $roleidstudents,
             'roleIdTeachers' => $roleidteachers,
         ];
+
+        // Validate parameters
         $params = self::validate_parameters(self::execute_parameters(), $params);
+
         $filter = !empty($params['filter']) ? $params['filter'] : '';
         $getCourses = !empty($params['getCourses']) ? $params['getCourses'] : false;
         $roleIdStudents = !empty($params['roleIdStudents']) ? $params['roleIdStudents'] : [];
         $roleIdTeachers = !empty($params['roleIdTeachers']) ? $params['roleIdTeachers'] : [];
 
+        // Get users
         $sql = "SELECT id, firstname as firstName, lastname as lastName, email
                   FROM {user}
                  WHERE CONCAT(firstname, ' ', lastname, ' ', email) LIKE '%$filter%'";
 
-
+        // Get users
         $users = $DB->get_records_sql($sql);
+
+        // If no users found, search by words
         if (empty($users)) {
             foreach (explode(' ', $filter) as $word) {
-                $sql .=  " OR CONCAT(firstname, ' ', lastname, ' ', email) LIKE '%$word%'";
+                $sql .= " OR CONCAT(firstname, ' ', lastname, ' ', email) LIKE '%$word%'";
             }
             $users = $DB->get_records_sql($sql);
         }
+
+        // Context level
         $contextlvl = CONTEXT_COURSE;
+
+        // Get role id students
         if (!empty($roleIdStudents)) {
             [$insql, $inparams] = $DB->get_in_or_equal($roleIdStudents);
         } else {
@@ -102,8 +120,13 @@ class get_user_info extends external_api {
             $inparams = [0];
         }
 
+        // If getCourses is true, get courses
         if ($getCourses) {
+
+            // Get courses
             $fields = 'c.id, c.shortname as shortName, c.fullname as fullName, c.startdate as startDate, c.enddate as endDate';
+
+            // SQL query
             $sql = "SELECT $fields
                       FROM {course} c
                       JOIN {context} ctx ON ctx.instanceid = c.id
@@ -111,15 +134,27 @@ class get_user_info extends external_api {
                      WHERE ctx.contextlevel = $contextlvl
                        AND ra.userid = ? AND ra.roleid $insql
                        ORDER BY c.startdate DESC";
+
+            // Iterate users
             foreach ($users as $index => $user) {
+
+                // Get courses
                 $courses = $DB->get_records_sql($sql, array_merge([$user->id], $inparams));
+
+                // Iterate courses
                 foreach ($courses as $id => $course) {
+
                     $courses[$id]->grade = grade_get_course_grade($user->id, $course->id)->grade;
                     $courses[$id]->currentWeek = format_uvirtual_get_course_current_week($course)[0];
                     $userlastacces = $DB->get_record('user_lastaccess', ['userid' => $user->id, 'courseid' => $course->id]);
                     $courses[$id]->lastAccess = $userlastacces->timeaccess;
+                    $courses[$id]->userBlock = get_role_by_course_and_user($user->id, $course->id);
                     $teacherfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
-                    $teachers = array_values(\course_info::get_course_tutor($course->id, $teacherfields, $roleIdTeachers));
+
+                    // Get teachers
+                    $teachers = array_values(course_info::get_course_tutor($course->id, $teacherfields, $roleIdTeachers));
+
+                    // Get teacher image
                     foreach ($teachers as $key => $teacher) {
                         $teachers[$key]->img = self::get_user_picture($teacher->id);
                     }
@@ -137,23 +172,40 @@ class get_user_info extends external_api {
     /**
      * Returns description of method result value
      *
-     * @return external_multiple_structure
+     * @return external_value
      * @since Moodle 2.2
      */
-    public static function execute_returns() {
+    public static function execute_returns(): external_value
+    {
         return new external_value(PARAM_TEXT, 'JSON object', VALUE_OPTIONAL);
     }
 
-    public static function get_user_picture($userid) {
+    /**
+     * @param $userid
+     * @return string
+     * @throws coding_exception
+     * @throws dml_exception
+     */
+    public static function get_user_picture($userid): string
+    {
         global $PAGE;
+
+        // Set context
         if (empty($PAGE->context)) {
-            $syscontext = \context_system::instance();
+            $syscontext = context_system::instance();
             $PAGE->set_context($syscontext);
         }
-        $users = \user_get_users_by_id([$userid]);
+
+        // Get user picture
+        $users = user_get_users_by_id([$userid]);
+
+        // Get first user
         $user = reset($users);
-        $user_picture = new \user_picture($user);
-        $picurl = $user_picture->get_url($PAGE)->out(false);
-        return $picurl;
+
+        // Get user picture
+        $user_picture = new user_picture($user);
+
+        // Return user picture
+        return $user_picture->get_url($PAGE)->out(false);
     }
 }
