@@ -111,7 +111,8 @@ class user_info
                     $status = 'notsubm';
                 }
             } else {
-                if($atv['name'] == 'Evaluación del curso' && !empty($gradeitem->datesubmitted)){
+                if($atv['name'] == 'Evaluación del curso' &&  $atv['viewed']){
+                    
                     $status = 'viewed';
                 }
                 if ($atv['viewed'] || !empty($gradeitem->dategraded)) {
