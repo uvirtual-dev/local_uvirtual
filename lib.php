@@ -27,6 +27,7 @@ use invalid_parameter_exception;
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
 require_once($CFG->dirroot . '/user/lib.php');
+require_once($CFG->dirroot . '/mod/questionnaire/questionnaire.class.php');
 
 function local_uvirtual_get_users_count($year = null) {
 
@@ -314,3 +315,38 @@ function local_uvirtual_change_role($email, $courses, $rolename, $newrolename) {
 
 }
 
+function local_uvirtual_get_response_questionnarie_by_user($userid, $courseid) {
+    global $DB;
+
+     // Get the questionnaire module
+     $module_questionnaire = $DB->get_record('modules', array('name' => 'questionnaire'));
+
+     // Get the course and course modules
+     $course = get_course($courseid);
+     $course_modules = get_course_mods($courseid);
+ 
+     $instance_questionnaire = "";
+     $cm = null;
+ 
+     // Iterate course modules
+     foreach ($course_modules as $course_module) {
+         $cm = $course_module;
+         if ($course_module->module == $module_questionnaire->id) {
+             $instance_questionnaire = $course_module->instance;
+         }
+     }
+ 
+     // If the questionnaire is not found, return an error
+     if ($instance_questionnaire == "") {
+         return [];
+     }
+ 
+     // Get the questionnaire
+     list ($course, $cm) = get_course_and_cm_from_instance($instance_questionnaire, 'questionnaire', $courseid);
+     $questionnaire = new questionnaire($course, $cm, $instance_questionnaire);
+ 
+     // Get the responses
+     $resps = $questionnaire->get_responses($userid);
+
+     return $resps;
+}

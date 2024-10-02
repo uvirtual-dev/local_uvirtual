@@ -24,6 +24,7 @@ require_once($CFG->dirroot . '/blocks/grade_overview/classes/course_info.php');
 require_once($CFG->dirroot . '/grade/querylib.php');
 require_once($CFG->dirroot . '/lib/grade/grade_item.php');
 require_once($CFG->dirroot . '/lib/grade/constants.php');
+require_once($CFG->dirroot . '/local/uvirtual/lib.php');
 
 class user_info
 {
@@ -111,14 +112,21 @@ class user_info
                     $status = 'notsubm';
                 }
             } else {
-                if( preg_match("/Evaluación del curso/i",$atv['name']) &&  $atv['completed']){
-                    
-                    $status = 'viewed';
-                }
+                
                 if ($atv['viewed'] || !empty($gradeitem->dategraded)) {
                     $status = 'viewed';
                 } else {
                     $status = 'notviewed';
+                }
+                if( preg_match("/Evaluación del curso/i",$atv['name'])){
+                   $evs = local_uvirtual_get_response_questionnarie_by_user($this->user->id, $atv['courseid']);
+                   $evs = array_values($evs);
+
+                   if(count($evs) == 1){
+                       if($evs[0]->complete == 'y'){
+                            $status = 'viewed';
+                       }
+                   }
                 }
             }
 
