@@ -36,10 +36,12 @@ use invalid_parameter_exception;
 use user_picture;
 
 defined('MOODLE_INTERNAL') || die;
+
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->dirroot . "/grade/querylib.php");
 require_once($CFG->libdir . '/gradelib.php');
 require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
+require_once($CFG->dirroot . '/local/uvirtual/lib.php');
 
 class get_user_info extends external_api
 {
