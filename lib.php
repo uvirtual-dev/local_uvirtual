@@ -350,3 +350,40 @@ function local_uvirtual_get_response_questionnarie_by_user($userid, $courseid) {
 
      return $resps;
 }
+
+/**
+ * @param $user
+ * @param $course
+ * @return bool
+ * @throws dml_exception
+ */
+function local_uvirtual_get_role_by_course_and_user($user, $course): bool
+{
+    global $DB;
+
+    // Get the role of the user in the course
+    $sql = "SELECT ra.roleid FROM {course} c
+                INNER JOIN {context} ctx ON c.id = ctx.instanceid
+                INNER JOIN {role_assignments} ra ON ctx.id = ra.contextid
+                INNER JOIN {user} u ON ra.userid = u.id
+                    WHERE u.id = :userid AND c.id = :courseid";
+
+    // Get role assignments
+    $roles = $DB->get_records_sql($sql, ['userid' => $user, 'courseid' => $course]);
+
+    $answer = [];
+
+    // Get role
+    foreach ($roles as $role) {
+
+        // Get role from DB
+        $role_db = $DB->get_record('role', ['id' => $role->roleid]);
+
+        // Check if the role is studbloq
+        if ($role_db->shortname == 'studbloq') {
+            return true;
+        }
+
+    }
+    return false;
+}
