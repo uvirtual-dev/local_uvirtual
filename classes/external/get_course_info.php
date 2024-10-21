@@ -140,6 +140,7 @@ class get_course_info extends external_api
                     'status' => '',
                     'grade10' => '',
                     'grade100' => '',
+                    'grade1000' => '',
                 ];
             } else {
                 $anwsers[] = [
@@ -153,6 +154,7 @@ class get_course_info extends external_api
                     'status' => $grade['status'] ?? false,
                     'grade10' => $grade['grade10'] ?? '',
                     'grade100' => $grade['grade100'] ?? '',
+                    'grade1000' => $grade['grade1000'] ?? '',
                 ];
             }
         }
