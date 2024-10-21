@@ -160,10 +160,7 @@ class get_course_info extends external_api
         $courseinfo->students = $anwsers;
         $courseinfo->teachers = array_values(course_info::get_course_tutor($courseid, $teachersfields, $roleidsteachers));
 
-        echo json_encode($courseinfo);
-        return json_encode([]);
-
-        //return json_encode($courseinfo);
+        return json_encode($courseinfo);
     }
 
     /**
