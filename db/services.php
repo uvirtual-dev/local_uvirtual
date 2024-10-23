@@ -153,6 +153,13 @@ $functions = [
         'description' => 'Obtiene la última acta creada por el profesor y contrasta con el libro de calificaciones',
         'type' => 'read'
     ],
+    'local_uvirtual_migrate_actas' => [
+        'classname' => 'local_uvirtual\external\migrate_actas',
+        'methodname' => 'execute',
+        'ajax' => false,
+        'description' => 'Migrar todas las actas a la versión actual',
+        'type' => 'read'
+    ],
 ];
 
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
