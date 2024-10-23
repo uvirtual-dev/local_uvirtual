@@ -512,7 +512,7 @@ function local_uvirtual_parse_html_table($html): array
         // Iterate cells
         foreach ($cells as $cell) {
             // Get the content of the cell
-            $rowData[] = trim($cell->nodeValue);
+            $rowData[] = utf8_decode($cell->nodeValue);
         }
 
         $tableData[] = $rowData;
