@@ -24,7 +24,6 @@
 
 namespace local_uvirtual\external;
 
-use core_reportbuilder\local\aggregation\count;
 use dml_exception;
 use external_api;
 use external_function_parameters;
@@ -47,6 +46,7 @@ class migrate_actas extends external_api
             'courses' => new external_value(PARAM_TEXT, 'Courses SHORTNAMES', VALUE_DEFAULT, ''),
             'all' => new external_value(PARAM_BOOL, 'All courses', VALUE_DEFAULT, false),
             'dev' => new external_value(PARAM_BOOL, 'Get JSON', VALUE_DEFAULT, false),
+            'delete' => new external_value(PARAM_BOOL, 'Delete Table', VALUE_DEFAULT, false),
         ]);
     }
 
@@ -54,11 +54,12 @@ class migrate_actas extends external_api
      * @param $courses
      * @param $all
      * @param $dev
+     * @param $delete
      * @return string
      * @throws dml_exception
      * @throws invalid_parameter_exception
      */
-    public static function execute($courses, $all, $dev): string
+    public static function execute($courses, $all, $dev, $delete): string
     {
         global $DB;
 
@@ -78,6 +79,11 @@ class migrate_actas extends external_api
             $courses = $DB->get_records('course');
         } else {
             $courses = $DB->get_records_list('course', 'shortname', $arr_courses);
+        }
+
+        // Check if delete
+        if ((!empty($dev) && $dev === true) && (!empty($delete) && $delete === true)) {
+            $DB->execute("UPDATE {course_actas} SET information = NULL WHERE information IS NOT NULL");
         }
 
         $answers = [];
@@ -138,7 +144,7 @@ class migrate_actas extends external_api
                                     // Get user
                                     $user_result = array_shift($user_result);
                                     $insert[] = [
-                                        'id' => $users->id,
+                                        'id' => $user_result->id,
                                         'grade10' => (int)$information[3],
                                         'grade100' => $information[4],
                                         'status' => $information[5],
