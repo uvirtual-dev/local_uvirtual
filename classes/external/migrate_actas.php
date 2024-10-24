@@ -45,6 +45,8 @@ class migrate_actas extends external_api
         return new external_function_parameters([
             'courses' => new external_value(PARAM_TEXT, 'Courses SHORTNAMES', VALUE_DEFAULT, ''),
             'all' => new external_value(PARAM_BOOL, 'All courses', VALUE_DEFAULT, false),
+            'export' => new external_value(PARAM_BOOL, 'Export acta', VALUE_DEFAULT, false),
+            'import' => new external_value(PARAM_BOOL, 'Import acta', VALUE_DEFAULT, false),
             'dev' => new external_value(PARAM_BOOL, 'Get JSON', VALUE_DEFAULT, false),
             'delete' => new external_value(PARAM_BOOL, 'Delete Table', VALUE_DEFAULT, false),
         ]);
@@ -53,13 +55,15 @@ class migrate_actas extends external_api
     /**
      * @param $courses
      * @param $all
+     * @param $export
+     * @param $import
      * @param $dev
      * @param $delete
      * @return string
      * @throws dml_exception
      * @throws invalid_parameter_exception
      */
-    public static function execute($courses, $all, $dev, $delete): string
+    public static function execute($courses, $all, $export, $import, $dev, $delete): string
     {
         global $DB;
 
@@ -74,6 +78,8 @@ class migrate_actas extends external_api
         // Get values
         $arr_courses = explode(',', $courses);
 
+        $answers = [];
+
         // Get courses by shortname
         if ($all) {
             $courses = $DB->get_records('course');
@@ -86,96 +92,157 @@ class migrate_actas extends external_api
             $DB->execute("UPDATE {course_actas} SET information = NULL WHERE information IS NOT NULL");
         }
 
-        $answers = [];
+        // Import data
+        if (!empty($import) && $import === true) {
 
-        // Iterate courses
-        foreach ($courses as $course) {
+            // Get raw body
+            $rawBody = file_get_contents('php://input');
 
-            // SQL get actas
-            $sql = "SELECT * FROM {course_actas} WHERE courseid = :courseid AND information IS NULL";
+            // Decode JSON body
+            $bodyData = json_decode($rawBody, true);
 
-            // Get actas
-            $actas = $DB->get_records_sql($sql, ['courseid' => $course->id]);
+            // SQL get acta
+            $sql = "SELECT * FROM {course_actas} WHERE id = :id AND information IS NULL";
 
-            // Iterate actas
-            foreach ($actas as $acta) {
+            // Get acta
+            $acta = $DB->get_record_sql($sql, ['id' => $bodyData['acta_id']]);
 
-                // Validate if information is null
-                if ($acta->information === null) {
+            $insert = [];
 
-                    // Get information
-                    $informations = local_uvirtual_parse_html_table(base64_decode($acta->data));
+            // Check if acta exists
+            if (!empty($acta)) {
 
-                    $insert = [];
-                    $validate = true;
+                // Get details
+                $informations = $bodyData['details'];
 
-                    // Iterate information
-                    foreach ($informations as $information) {
+                // Iterate information
+                foreach ($informations as $information) {
+                    $insert[] = [
+                        'id' => $information['id'],
+                        'grade10' => $information['grade10'],
+                        'grade100' => $information['grade100'],
+                        'status' => $information['status'],
+                    ];
+                }
 
-                        // SQL to get user
-                        $sql = "SELECT id, lastname, firstname FROM {user} WHERE lastname LIKE :lastname AND deleted = 0";
+                // Update acta
+                $acta->information = json_encode($insert);
+                $DB->update_record('course_actas', $acta);
 
-                        // Get user
-                        $users = $DB->get_records_sql($sql, ['lastname' => '%' . $information[1] . '%']);
+            }
 
-                        // Check if user exists
-                        switch (true) {
-                            case count($users) == 0:
-                                $validate = false;
-                                break;
-                            case count($users) == 1:
-                                // Get user
-                                $users = array_shift($users);
-                                $insert[] = [
-                                    'id' => $users->id,
-                                    'grade10' => (int)$information[3],
-                                    'grade100' => $information[4],
-                                    'status' => $information[5],
-                                ];
-                                break;
-                            case count($users) > 1:
-                                // Find user
-                                $user_result = array_filter($users, function ($user) use ($information) {
-                                    return strpos($user->firstname, $information[2]) !== false;
-                                });
+        } else {
+            // Iterate courses
+            foreach ($courses as $course) {
 
-                                // Check if user exists
-                                if (!empty($user_result)) {
-                                    // Get user
-                                    $user_result = array_shift($user_result);
+                // SQL get actas
+                $sql = "SELECT * FROM {course_actas} WHERE courseid = :courseid AND information IS NULL";
+
+                // Get actas
+                $actas = $DB->get_records_sql($sql, ['courseid' => $course->id]);
+
+                // Iterate actas
+                foreach ($actas as $acta) {
+
+                    // Validate if information is null
+                    if ($acta->information === null) {
+
+                        // Get information
+                        $informations = local_uvirtual_parse_html_table(base64_decode($acta->data));
+
+                        $insert = [];
+                        $validate = true;
+
+                        // Iterate information
+                        foreach ($informations as $information) {
+
+                            // SQL to get user
+                            $sql = "SELECT id, lastname, firstname FROM {user} WHERE lastname LIKE :lastname AND deleted = 0";
+
+                            // Get user
+                            $users = $DB->get_records_sql($sql, ['lastname' => '%' . $information[1] . '%']);
+
+                            // Check if user exists
+                            switch (true) {
+                                case count($users) == 0:
                                     $insert[] = [
-                                        'id' => $user_result->id,
+                                        'id' => '',
+                                        'lastname' => $information[1],
+                                        'firstname' => $information[2],
                                         'grade10' => (int)$information[3],
                                         'grade100' => $information[4],
                                         'status' => $information[5],
                                     ];
-                                } else {
                                     $validate = false;
-                                }
-                                break;
+                                    break;
+                                case count($users) == 1:
+                                    // Get user
+                                    $users = array_shift($users);
+                                    $insert[] = [
+                                        'id' => (int)$users->id,
+                                        'grade10' => (int)$information[3],
+                                        'grade100' => $information[4],
+                                        'status' => $information[5],
+                                    ];
+                                    break;
+                                case count($users) > 1:
+                                    // Find user
+                                    $user_result = array_filter($users, function ($user) use ($information) {
+                                        return strpos($user->firstname, $information[2]) !== false;
+                                    });
+
+                                    // Check if user exists
+                                    if (!empty($user_result)) {
+                                        // Get user
+                                        $user_result = array_shift($user_result);
+                                        $insert[] = [
+                                            'id' => (int)$user_result->id,
+                                            'grade10' => (int)$information[3],
+                                            'grade100' => $information[4],
+                                            'status' => $information[5],
+                                        ];
+                                    } else {
+                                        $insert[] = [
+                                            'id' => '',
+                                            'lastname' => $information[1],
+                                            'firstname' => $information[2],
+                                            'grade10' => (int)$information[3],
+                                            'grade100' => $information[4],
+                                            'status' => $information[5],
+                                        ];
+                                        $validate = false;
+                                    }
+                                    break;
+                            }
                         }
-                    }
 
-                    // Check if validate
-                    if ($validate) {
+                        // Export error
+                        if (!empty($export) && $export === true) {
+                            echo json_encode($acta->id);
+                            echo json_encode($insert);
+                        }
 
-                        // Update acta
-                        $acta->information = json_encode($insert);
-                        $DB->update_record('course_actas', $acta);
+                        // Check if validate
+                        if ($validate) {
 
-                        $answers[] = [
-                            'course' => $course->id,
-                            'shortname' => $course->shortname,
-                            'acta_id' => $acta->id,
-                            'insert' => true,
-                        ];
-                    } else {
-                        $answers[] = [
-                            'course' => $course->id,
-                            'shortname' => $course->shortname,
-                            'acta_id' => $acta->id,
-                            'insert' => false,
-                        ];
+                            // Update acta
+                            $acta->information = json_encode($insert);
+                            $DB->update_record('course_actas', $acta);
+
+                            $answers[] = [
+                                'course' => $course->id,
+                                'shortname' => $course->shortname,
+                                'acta_id' => $acta->id,
+                                'insert' => true,
+                            ];
+                        } else {
+                            $answers[] = [
+                                'course' => $course->id,
+                                'shortname' => $course->shortname,
+                                'acta_id' => $acta->id,
+                                'insert' => false,
+                            ];
+                        }
                     }
                 }
             }
