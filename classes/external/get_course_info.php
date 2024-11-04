@@ -127,6 +127,9 @@ class get_course_info extends external_api
 
             $grade = array_shift($grade);
 
+            $gradeMoodle = (float)$student->grade;
+            $roundGrade = number_format(round($gradeMoodle, 2), 2, '.', '');
+
             // Validate if student has grade
             if (empty($grade)) {
                 $anwsers[] = [
@@ -135,7 +138,7 @@ class get_course_info extends external_api
                     'lastname' => $student->lastname,
                     'email' => $student->email,
                     'lastaccess' => $student->lastaccess,
-                    'grade' => $student->grade,
+                    'grade' => $roundGrade,
                     'status_acta' => false,
                     'status' => '',
                     'grade10' => '',
@@ -149,7 +152,7 @@ class get_course_info extends external_api
                     'lastname' => $student->lastname,
                     'email' => $student->email,
                     'lastaccess' => $student->lastaccess,
-                    'grade' => $student->grade,
+                    'grade' => $roundGrade,
                     'status_acta' => true,
                     'status' => $grade['status'] ?? false,
                     'grade10' => $grade['grade10'] ?? '',
