@@ -462,6 +462,10 @@ function local_uvirtual_get_last_course_actas_by_course($course, $students, bool
                     'grade100' => $acta['grade100'],
                     'status' => $status,
                     'grade1000' => $grade,
+                    'sum10' => $course_actas->sum10,
+                    'sum100' => $course_actas->sum100,
+                    'created_at' => $course_actas->created_at,
+                    'acta_id' => $course_actas->id,
                 ];
             } else {
                 // Return the answer
@@ -474,6 +478,10 @@ function local_uvirtual_get_last_course_actas_by_course($course, $students, bool
                     'grade100' => $acta['grade100'],
                     'status' => $status,
                     'grade1000' => $grade,
+                    'sum10' => $course_actas->sum10,
+                    'sum100' => $course_actas->sum100,
+                    'created_at' => $course_actas->created_at,
+                    'acta_id' => $course_actas->id,
                 ];
             }
         }
