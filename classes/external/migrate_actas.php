@@ -89,7 +89,7 @@ class migrate_actas extends external_api
 
         // Check if delete
         if ((!empty($dev) && $dev === true) && (!empty($delete) && $delete === true)) {
-            $DB->execute("UPDATE {course_actas} SET information = NULL WHERE information IS NOT NULL");
+            $DB->execute("UPDATE {course_actas} SET information = NULL, sum10 = NULL, sum100 = NULL WHERE information IS NOT NULL");
         }
 
         // Import data
@@ -225,7 +225,18 @@ class migrate_actas extends external_api
                         // Check if validate
                         if ($validate) {
 
+                            $sum10 = 0.0;
+                            $sum100 = 0;
+
+                            // Iterate final
+                            foreach ($insert as $key => $value) {
+                                $sum100 += $value['grade10'];
+                                $sum10 += (float)$value['grade100'];
+                            }
+
                             // Update acta
+                            $acta->sum100 = $sum10;
+                            $acta->sum10 = $sum100;
                             $acta->information = json_encode($insert);
                             $DB->update_record('course_actas', $acta);
 
