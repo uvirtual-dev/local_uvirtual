@@ -75,7 +75,8 @@ class get_course_info extends external_api
      */
     public static function execute($courseid, $roleidsstudents, $roleidsteachers): string
     {
-        global $DB;
+        global $DB, $CFG;
+
         $params = [
             'courseId' => $courseid,
             'roleIdsStudents' => $roleidsstudents,
@@ -114,6 +115,13 @@ class get_course_info extends external_api
         $students_internal = local_uvirtual_get_students_by_course($courseinfo);
         $details = local_uvirtual_get_last_course_actas_by_course($courseinfo, $students_internal, true);
         $students = array_values(course_info::get_course_students($courseid, 0, $studentsfields, $roleidsstudents));
+
+        if (!empty($details)) {
+            $courseinfo->totalGradeActa = (int)$details[0]['sum10'];
+            $courseinfo->createdAtActa = (int)$details[0]['created_at'];
+            $acta_id = $details[0]['acta_id'];
+            $courseinfo->url = $CFG->wwwroot . "/blocks/grade_overview/download.php?id=$courseid&group=0&op=d&dataformat=pdf&teacher=0&actaid=$acta_id&download=true";
+        }
 
         $anwsers = [];
 
