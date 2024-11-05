@@ -115,6 +115,9 @@ class migrate_actas extends external_api
                 // Get details
                 $informations = $bodyData['details'];
 
+                $sum100 = 0.0;
+                $sum10 = 0;
+
                 // Iterate information
                 foreach ($informations as $information) {
                     $insert[] = [
@@ -123,10 +126,16 @@ class migrate_actas extends external_api
                         'grade100' => $information['grade100'],
                         'status' => $information['status'],
                     ];
+
+                    // Sum
+                    $sum10 += (int)$information['grade10'];
+                    $sum100 += (float)$information['grade100'];
                 }
 
                 // Update acta
                 $acta->information = json_encode($insert);
+                $acta->sum10 = $sum10;
+                $acta->sum100 = $sum100;
                 $DB->update_record('course_actas', $acta);
 
             }
