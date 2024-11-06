@@ -26,20 +26,22 @@ namespace local_uvirtual\external;
 
 global $CFG;
 
+use dml_exception;
 use external_api;
 use external_function_parameters;
 use external_multiple_structure;
-use external_single_structure;
 use external_value;
 use course_info;
+use invalid_parameter_exception;
 
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->dirroot . "/blocks/grade_overview/classes/course_info.php");
 require_once($CFG->dirroot . "/course/format/lib.php");
+require_once($CFG->dirroot . '/local/uvirtual/lib.php');
 
-
-class get_course_info extends external_api {
+class get_course_info extends external_api
+{
 
     /**
      * Returns description of method parameters
@@ -47,13 +49,14 @@ class get_course_info extends external_api {
      * @return external_function_parameters
      * @since Moodle 2.2
      */
-    public static function execute_parameters() {
+    public static function execute_parameters(): external_function_parameters
+    {
         return new external_function_parameters(
             [
                 'courseId' => new external_value(PARAM_INT, 'Course id', VALUE_REQUIRED, ''),
-                'roleIdsStudents' =>  new external_multiple_structure(
+                'roleIdsStudents' => new external_multiple_structure(
                     new external_value(PARAM_TEXT, 'Role ids students', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, []),
-                'roleIdsTeachers' =>  new external_multiple_structure(
+                'roleIdsTeachers' => new external_multiple_structure(
                     new external_value(PARAM_TEXT, 'Role ids teachers', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, [])
             ]
         );
@@ -62,16 +65,20 @@ class get_course_info extends external_api {
     /**
      * Return the categories tree.
      *
+     * @param $courseid
+     * @param $roleidsstudents
+     * @param $roleidsteachers
+     * @return string
+     * @throws dml_exception
      * @throws invalid_parameter_exception
-     * @param array $coursetype Course type to filter
-     * @param array $studentid Student id to filter
-     * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($courseid, $roleidsstudents, $roleidsteachers) {
-        global $DB;
+    public static function execute($courseid, $roleidsstudents, $roleidsteachers): string
+    {
+        global $DB, $CFG;
+
         $params = [
-            'courseId'  => $courseid,
+            'courseId' => $courseid,
             'roleIdsStudents' => $roleidsstudents,
             'roleIdsTeachers' => $roleidsteachers
         ];
@@ -104,7 +111,66 @@ class get_course_info extends external_api {
         $studentsfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, ul.timeaccess as lastAccess, gg.finalgrade as grade';
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
 
-        $courseinfo->students = array_values(course_info::get_course_students($courseid, 0 ,$studentsfields, $roleidsstudents));
+        // Get students
+        $students_internal = local_uvirtual_get_students_by_course($courseinfo);
+        $details = local_uvirtual_get_last_course_actas_by_course($courseinfo, $students_internal, true);
+        $students = array_values(course_info::get_course_students($courseid, 0, $studentsfields, $roleidsstudents));
+
+        if (!empty($details)) {
+            $courseinfo->totalGradeActa = (int)$details[0]['sum10'];
+            $courseinfo->createdAtActa = (int)$details[0]['created_at'];
+            $acta_id = $details[0]['acta_id'];
+            $courseinfo->url = $CFG->wwwroot . "/blocks/grade_overview/download.php?id=$courseid&group=0&op=d&dataformat=pdf&teacher=0&actaid=$acta_id&download=true";
+        }
+
+        $anwsers = [];
+
+        // Iterate students
+        foreach ($students as $student) {
+
+            // Get student details
+            $grade = array_filter($details, function ($detail) use ($student) {
+                return $detail['id_usuario'] == $student->id;
+            });
+
+            $grade = array_shift($grade);
+
+            $gradeMoodle = (float)$student->grade;
+            $roundGrade = number_format(round($gradeMoodle, 2), 2, '.', '');
+
+            // Validate if student has grade
+            if (empty($grade)) {
+                $anwsers[] = [
+                    'id' => $student->id,
+                    'firstname' => $student->firstname,
+                    'lastname' => $student->lastname,
+                    'email' => $student->email,
+                    'lastaccess' => $student->lastaccess,
+                    'grade' => $roundGrade,
+                    'status_acta' => false,
+                    'status' => '',
+                    'grade10' => '',
+                    'grade100' => '',
+                    'grade1000' => '',
+                ];
+            } else {
+                $anwsers[] = [
+                    'id' => $student->id,
+                    'firstname' => $student->firstname,
+                    'lastname' => $student->lastname,
+                    'email' => $student->email,
+                    'lastaccess' => $student->lastaccess,
+                    'grade' => $roundGrade,
+                    'status_acta' => true,
+                    'status' => $grade['status'] ?? false,
+                    'grade10' => $grade['grade10'] ?? '',
+                    'grade100' => $grade['grade100'] ?? '',
+                    'grade1000' => $grade['grade1000'] ?? '',
+                ];
+            }
+        }
+
+        $courseinfo->students = $anwsers;
         $courseinfo->teachers = array_values(course_info::get_course_tutor($courseid, $teachersfields, $roleidsteachers));
 
         return json_encode($courseinfo);
@@ -113,10 +179,11 @@ class get_course_info extends external_api {
     /**
      * Returns description of method result value
      *
-     * @return external_multiple_structure
+     * @return external_value
      * @since Moodle 2.2
      */
-    public static function execute_returns() {
+    public static function execute_returns(): external_value
+    {
         return new external_value(PARAM_TEXT, 'JSON object', VALUE_OPTIONAL);
     }
 }

@@ -26,20 +26,23 @@ namespace local_uvirtual\external;
 
 global $CFG;
 
+use dml_exception;
 use external_api;
 use external_function_parameters;
 use external_multiple_structure;
-use external_single_structure;
 use external_value;
 use course_info;
+use invalid_parameter_exception;
 
 defined('MOODLE_INTERNAL') || die;
+
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->dirroot . "/blocks/grade_overview/classes/course_info.php");
 require_once($CFG->dirroot . "/course/format/lib.php");
+require_once($CFG->dirroot . "/local/uvirtual/lib.php");
 
-
-class get_filtered_courses_info extends external_api {
+class get_filtered_courses_info extends external_api
+{
 
     /**
      * Returns description of method parameters
@@ -47,13 +50,14 @@ class get_filtered_courses_info extends external_api {
      * @return external_function_parameters
      * @since Moodle 2.2
      */
-    public static function execute_parameters() {
+    public static function execute_parameters(): external_function_parameters
+    {
         return new external_function_parameters(
             [
                 'filter' => new external_value(PARAM_TEXT, 'Course id', VALUE_REQUIRED, ''),
-                'roleIdsTeachers' =>  new external_multiple_structure(
+                'roleIdsTeachers' => new external_multiple_structure(
                     new external_value(PARAM_TEXT, 'Role ids tutors', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, []),
-                'roleIdsOthers' =>  new external_multiple_structure(
+                'roleIdsOthers' => new external_multiple_structure(
                     new external_value(PARAM_TEXT, 'Role ids others', VALUE_DEFAULT, ''), 'Roles Ids', VALUE_DEFAULT, [])
             ]
         );
@@ -62,19 +66,24 @@ class get_filtered_courses_info extends external_api {
     /**
      * Return the categories tree.
      *
+     * @param $filter
+     * @param $roleidstutors
+     * @param $roleidsothers
+     * @return string
+     * @throws dml_exception
      * @throws invalid_parameter_exception
-     * @param array $coursetype Course type to filter
-     * @param array $studentid Student id to filter
-     * @return array An array of arrays
      * @since Moodle 2.2
      */
-    public static function execute($filter, $roleidstutors, $roleidsothers) {
+    public static function execute($filter, $roleidstutors, $roleidsothers): string
+    {
         global $DB;
+
         $params = [
-            'filter'  => $filter,
+            'filter' => $filter,
             'roleIdsTeachers' => $roleidstutors,
             'roleIdsOthers' => $roleidsothers
         ];
+
         $params = self::validate_parameters(self::execute_parameters(), $params);
         $filter = $params['filter'];
         $roleidstutors = $params['roleIdsTeachers'];
@@ -90,9 +99,15 @@ class get_filtered_courses_info extends external_api {
         $teachersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
         $othersfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, r.shortname as rol';
         foreach ($coursesinfo as $courseid => $courseinfo) {
+
+            $acta = local_uvirtual_get_last_course_actas_by_course_minified($courseinfo);
+
             $coursesinfo[$courseid]->teachers = array_values(course_info::get_course_tutor($courseinfo->id, $teachersfields, $roleidstutors));
             $coursesinfo[$courseid]->others = array_values(course_info::get_course_tutor($courseinfo->id, $othersfields, $roleidsothers));
             $coursesinfo[$courseid]->status = ($courseinfo->startDate < time()) && ($courseinfo->endDate > time());
+            $coursesinfo[$courseid]->totalGradeActa = $acta['totalGradeActa'];
+            $coursesinfo[$courseid]->createdAtActa = $acta['createdAtActa'];
+            $coursesinfo[$courseid]->url = $acta['url'];
             $ahora = time();
             if ($ahora > $courseinfo->startdate && $ahora < $courseinfo->enddate) {
                 $format = \course_get_format($courseinfo->id);
@@ -109,17 +124,17 @@ class get_filtered_courses_info extends external_api {
             }
         }
 
-
         return json_encode(array_values($coursesinfo));
     }
 
     /**
      * Returns description of method result value
      *
-     * @return external_multiple_structure
+     * @return external_value
      * @since Moodle 2.2
      */
-    public static function execute_returns() {
+    public static function execute_returns(): external_value
+    {
         return new external_value(PARAM_TEXT, 'JSON object', VALUE_OPTIONAL);
     }
 }

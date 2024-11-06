@@ -145,7 +145,21 @@ $functions = [
         'ajax' => true,
         'description' => 'Obtiene los cursos filtrados por fecha y typo de curso, permite enviar el campo de consulta (enddate, startdate) y el valor de dicho campo en formato timestap',
         'type' => 'read'
-    ]
+    ],
+    'local_uvirtual_get_actas_and_grades_by_courses' => [
+        'classname' => 'local_uvirtual\external\get_actas_and_grades_by_courses',
+        'methodname' => 'execute',
+        'ajax' => true,
+        'description' => 'Obtiene la última acta creada por el profesor y contrasta con el libro de calificaciones',
+        'type' => 'read'
+    ],
+    'local_uvirtual_migrate_actas' => [
+        'classname' => 'local_uvirtual\external\migrate_actas',
+        'methodname' => 'execute',
+        'ajax' => false,
+        'description' => 'Migrar todas las actas a la versión actual',
+        'type' => 'read'
+    ],
 ];
 
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
@@ -169,7 +183,8 @@ $services = [
                 'local_uvirtual_set_user_preferences',
                 'local_uvirtual_block_user',
                 'local_uvirtual_unblock_user',
-                'local_uvirtual_get_filtered_courses_by_date'
+                'local_uvirtual_get_filtered_courses_by_date',
+                'local_uvirtual_get_actas_and_grades_by_courses'
             ],
             'restrictedusers' => 0,
             'enabled' => 1,
