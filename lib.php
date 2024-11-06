@@ -396,6 +396,51 @@ function local_uvirtual_get_role_by_course_and_user($user, $course): bool
 
 /**
  * @param $course
+ * @return array
+ * @throws dml_exception
+ */
+function local_uvirtual_get_last_course_actas_by_course_minified($course): array
+{
+    global $DB, $CFG;
+
+    // Get tutor role id
+    $tutor = $DB->get_field('role', 'id', ['shortname' => 'noeditingteacher']);
+
+    // Get the teachers
+    $tutor_ids = course_info::get_course_tutor($course->id, 'u.*', $tutor);
+
+    $answers = [];
+
+    // SQL get final grades
+    $sql = "SELECT gg.userid, gg.finalgrade FROM {grade_items} as gi 
+                INNER JOIN {grade_grades} as gg ON gi.id = gg.itemid 
+                    WHERE gi.courseid = :courseid AND gi.itemtype = 'course'";
+
+    // Iterate tutor
+    foreach ($tutor_ids as $tutor_id) {
+
+        // SQL get course_actas
+        $sql = "SELECT * FROM {course_actas} WHERE courseid = :courseid AND userid = :userid ORDER BY created_at DESC LIMIT 1";
+
+        // Get course_actas
+        $course_actas = $DB->get_record_sql($sql, ['courseid' => $course->id, 'userid' => $tutor_id->id]);
+
+        $acta_id = $course_actas->id;
+        $course_id = $course->id;
+
+        $answers = [
+            'totalGradeActa' => (int)$course_actas->sum10,
+            'createdAtActa' => (int)$course_actas->created_at,
+            'url' => $CFG->wwwroot . "/blocks/grade_overview/download.php?id=$course_id&group=0&op=d&dataformat=pdf&teacher=0&actaid=$acta_id&download=true",
+        ];
+
+    }
+
+    return $answers;
+}
+
+/**
+ * @param $course
  * @param $students
  * @param bool $filter
  * @return array
