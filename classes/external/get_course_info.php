@@ -144,6 +144,8 @@ class get_course_info extends external_api
             $gradeMoodle = (float)$student->grade;
             $roundGrade = number_format(round($gradeMoodle, 2), 2, '.', '');
 
+            $userBlock = local_uvirtual_get_role_by_course_and_user($student->id, $courseid);
+
             // Validate if student has grade
             if (empty($grade)) {
                 $anwsers[] = [
@@ -158,6 +160,7 @@ class get_course_info extends external_api
                     'grade10' => '',
                     'grade100' => '',
                     'grade1000' => '',
+                    'userBlock' => $userBlock,
                 ];
             } else {
                 $anwsers[] = [
@@ -172,6 +175,7 @@ class get_course_info extends external_api
                     'grade10' => $grade['grade10'] ?? '',
                     'grade100' => $grade['grade100'] ?? '',
                     'grade1000' => $grade['grade1000'] ?? '',
+                    'userBlock' => $userBlock,
                 ];
             }
         }
