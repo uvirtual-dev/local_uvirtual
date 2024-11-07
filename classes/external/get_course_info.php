@@ -117,19 +117,20 @@ class get_course_info extends external_api
         $students = array_values(course_info::get_course_students($courseid, 0, $studentsfields, $roleidsstudents));
 
         if (!empty($details)) {
-            $courseinfo->acta = true;
             $courseinfo->totalGradeActa = (int)$details[0]['sum10'];
             $courseinfo->createdAtActa = (int)$details[0]['created_at'];
             $acta_id = $details[0]['acta_id'];
             $courseinfo->url = $CFG->wwwroot . "/blocks/grade_overview/download.php?id=$courseid&group=0&op=d&dataformat=pdf&teacher=0&actaid=$acta_id&download=true";
         } else {
-            $courseinfo->acta = false;
             $courseinfo->totalGradeActa = '';
             $courseinfo->createdAtActa = '';
             $courseinfo->url = '';
         }
 
         $anwsers = [];
+        $statusActa = [];
+        $status = [];
+        $finalStatus = false;
 
         // Iterate students
         foreach ($students as $student) {
@@ -156,12 +157,14 @@ class get_course_info extends external_api
                     'lastaccess' => $student->lastaccess,
                     'grade' => $roundGrade,
                     'status_acta' => false,
-                    'status' => '',
+                    'status' => false,
                     'grade10' => '',
                     'grade100' => '',
                     'grade1000' => '',
                     'userBlock' => $userBlock,
                 ];
+                $statusActa[] = false;
+                $status[] = false;
             } else {
                 $anwsers[] = [
                     'id' => $student->id,
@@ -177,8 +180,17 @@ class get_course_info extends external_api
                     'grade1000' => $grade['grade1000'] ?? '',
                     'userBlock' => $userBlock,
                 ];
+                $statusActa[] = true;
+                $status[] = $grade['status'] ?? false;
             }
         }
+
+        // Validate if all students have grade
+        if (!in_array(false, $statusActa, true) && !in_array(false, $status, true)) {
+            $finalStatus = true;
+        }
+
+        $courseinfo->statusActa = $finalStatus;
 
         $courseinfo->students = $anwsers;
         $courseinfo->teachers = array_values(course_info::get_course_tutor($courseid, $teachersfields, $roleidsteachers));
