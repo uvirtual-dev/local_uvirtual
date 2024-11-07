@@ -117,10 +117,16 @@ class get_course_info extends external_api
         $students = array_values(course_info::get_course_students($courseid, 0, $studentsfields, $roleidsstudents));
 
         if (!empty($details)) {
+            $courseinfo->acta = true;
             $courseinfo->totalGradeActa = (int)$details[0]['sum10'];
             $courseinfo->createdAtActa = (int)$details[0]['created_at'];
             $acta_id = $details[0]['acta_id'];
             $courseinfo->url = $CFG->wwwroot . "/blocks/grade_overview/download.php?id=$courseid&group=0&op=d&dataformat=pdf&teacher=0&actaid=$acta_id&download=true";
+        } else {
+            $courseinfo->acta = false;
+            $courseinfo->totalGradeActa = '';
+            $courseinfo->createdAtActa = '';
+            $courseinfo->url = '';
         }
 
         $anwsers = [];
