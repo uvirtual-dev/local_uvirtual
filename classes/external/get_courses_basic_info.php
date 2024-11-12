@@ -167,6 +167,52 @@ class get_courses_basic_info extends external_api
 
             $studentsfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, ul.timeaccess as lastAccess, gg.finalgrade as grade';
             $studentsEnrollments = array_values(course_info::get_course_students($courseid, 0, $studentsfields, $roleidsstudents));
+
+            // Get information for actas
+            $students_internal = local_uvirtual_get_students_by_course($courseinfo);
+            $details = local_uvirtual_get_last_course_actas_by_course($courseinfo, $students_internal, true);
+
+            if (!empty($details)) {
+                $courseinfo->totalGradeActa = (int)$details[0]['sum10'];
+                $courseinfo->createdAtActa = (int)$details[0]['created_at'];
+            } else {
+                $courseinfo->totalGradeActa = '';
+                $courseinfo->createdAtActa = '';
+            }
+
+            $statusActa = [];
+            $status = [];
+            $finalStatus = false;
+
+            // Iterate students
+            foreach ($studentsEnrollments as $student) {
+
+                // Get student details
+                $grade = array_filter($details, function ($detail) use ($student) {
+                    return $detail['id_usuario'] == $student->id;
+                });
+
+                $grade = array_shift($grade);
+
+                $gradeMoodle = (float)$student->grade;
+                $roundGrade = number_format(round($gradeMoodle, 2), 2, '.', '');
+
+                // Validate if student has grade
+                if (empty($grade)) {
+                    $statusActa[] = false;
+                    $status[] = false;
+                } else {
+                    $statusActa[] = true;
+                    $status[] = $grade['status'] ?? false;
+                }
+            }
+
+            // Validate if all students have grade
+            if (!in_array(false, $statusActa, true) && !in_array(false, $status, true)) {
+                $finalStatus = true;
+            }
+
+            $courseinfo->statusActa = $finalStatus;
             $courseinfo->students = count($studentsEnrollments);
 
             $ahora = time();
