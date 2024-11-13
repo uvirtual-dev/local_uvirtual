@@ -86,7 +86,7 @@ class get_courses_basic_info extends external_api
      */
     public static function execute($typecourse, $roleidstutors, $roleidsstudents, $activecourses, $pastcourses, $timefilter, $nextcourses): string
     {
-        global $DB;
+        global $DB, $CFG;
 
         $params = [
             'typeCourse' => $typecourse,
@@ -175,9 +175,12 @@ class get_courses_basic_info extends external_api
             if (!empty($details)) {
                 $courseinfo->totalGradeActa = (int)$details[0]['sum10'];
                 $courseinfo->createdAtActa = (int)$details[0]['created_at'];
+                $acta_id = $details[0]['acta_id'];
+                $courseinfo->url = $CFG->wwwroot . "/blocks/grade_overview/download.php?id=$courseid&group=0&op=d&dataformat=pdf&teacher=0&actaid=$acta_id&download=true";
             } else {
                 $courseinfo->totalGradeActa = '';
                 $courseinfo->createdAtActa = '';
+                $courseinfo->url = '';
             }
 
             $statusActa = [];
