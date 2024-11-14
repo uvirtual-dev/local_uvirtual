@@ -36,10 +36,12 @@ use invalid_parameter_exception;
 use user_picture;
 
 defined('MOODLE_INTERNAL') || die;
+
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->dirroot . "/grade/querylib.php");
 require_once($CFG->libdir . '/gradelib.php');
 require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
+require_once($CFG->dirroot . '/local/uvirtual/lib.php');
 
 class get_user_info extends external_api
 {
@@ -148,7 +150,7 @@ class get_user_info extends external_api
                     $courses[$id]->currentWeek = format_uvirtual_get_course_current_week($course)[0];
                     $userlastacces = $DB->get_record('user_lastaccess', ['userid' => $user->id, 'courseid' => $course->id]);
                     $courses[$id]->lastAccess = $userlastacces->timeaccess;
-                    //$courses[$id]->userBlock = get_role_by_course_and_user($user->id, $course->id);
+                    $courses[$id]->userBlock = local_uvirtual_get_role_by_course_and_user($user->id, $course->id);
                     $teacherfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email';
 
                     // Get teachers
