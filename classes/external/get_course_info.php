@@ -121,9 +121,16 @@ class get_course_info extends external_api
             $courseinfo->createdAtActa = (int)$details[0]['created_at'];
             $acta_id = $details[0]['acta_id'];
             $courseinfo->url = $CFG->wwwroot . "/blocks/grade_overview/download.php?id=$courseid&group=0&op=d&dataformat=pdf&teacher=0&actaid=$acta_id&download=true";
+        } else {
+            $courseinfo->totalGradeActa = '';
+            $courseinfo->createdAtActa = '';
+            $courseinfo->url = '';
         }
 
         $anwsers = [];
+        $statusActa = [];
+        $status = [];
+        $finalStatus = false;
 
         // Iterate students
         foreach ($students as $student) {
@@ -138,6 +145,8 @@ class get_course_info extends external_api
             $gradeMoodle = (float)$student->grade;
             $roundGrade = number_format(round($gradeMoodle, 2), 2, '.', '');
 
+            $userBlock = local_uvirtual_get_role_by_course_and_user($student->id, $courseid);
+
             // Validate if student has grade
             if (empty($grade)) {
                 $anwsers[] = [
@@ -148,11 +157,14 @@ class get_course_info extends external_api
                     'lastaccess' => $student->lastaccess,
                     'grade' => $roundGrade,
                     'status_acta' => false,
-                    'status' => '',
+                    'status' => false,
                     'grade10' => '',
                     'grade100' => '',
                     'grade1000' => '',
+                    'userBlock' => $userBlock,
                 ];
+                $statusActa[] = false;
+                $status[] = false;
             } else {
                 $anwsers[] = [
                     'id' => $student->id,
@@ -166,9 +178,19 @@ class get_course_info extends external_api
                     'grade10' => $grade['grade10'] ?? '',
                     'grade100' => $grade['grade100'] ?? '',
                     'grade1000' => $grade['grade1000'] ?? '',
+                    'userBlock' => $userBlock,
                 ];
+                $statusActa[] = true;
+                $status[] = $grade['status'] ?? false;
             }
         }
+
+        // Validate if all students have grade
+        if (!in_array(false, $statusActa, true) && !in_array(false, $status, true)) {
+            $finalStatus = true;
+        }
+
+        $courseinfo->statusActa = $finalStatus;
 
         $courseinfo->students = $anwsers;
         $courseinfo->teachers = array_values(course_info::get_course_tutor($courseid, $teachersfields, $roleidsteachers));
