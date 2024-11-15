@@ -132,7 +132,8 @@ class get_courses_basic_info extends external_api
         $sql = "SELECT id, fullname as name, shortname, startdate, enddate 
                          FROM {course} 
                         WHERE $timesql
-                              AND visible = 1";
+                              AND visible = 1
+                              ORDER BY enddate DESC";
 
         $courses = $DB->get_records_sql($sql);
 
