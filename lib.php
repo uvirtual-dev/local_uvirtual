@@ -25,7 +25,6 @@
 use invalid_parameter_exception;
 
 defined('MOODLE_INTERNAL') || die();
-require_once($CFG->dirroot . "/course/format/uvirtual/lib.php");
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/mod/questionnaire/questionnaire.class.php');
 
