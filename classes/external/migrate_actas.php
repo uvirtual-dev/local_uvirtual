@@ -87,159 +87,184 @@ class migrate_actas extends external_api
             $courses = $DB->get_records_list('course', 'shortname', $arr_courses);
         }
 
-        $html = '<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">1</td>
-    <td width="180" style="text-align: left;">Aldana Hernandez</td>
-    <td width="180" style="text-align: left;">Sayra Guinette</td>
-    <td width="78">82</td>
-    <td width="76">8,2</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">2</td>
-    <td width="180" style="text-align: left;">Altuna Ramirez</td>
-    <td width="180" style="text-align: left;">Mishelle Nicolle</td>
-    <td width="78">88</td>
-    <td width="76">8,8</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">3</td>
-    <td width="180" style="text-align: left;">Arrese Orellana</td>
-    <td width="180" style="text-align: left;">Luis Humberto</td>
-    <td width="78">73</td>
-    <td width="76">7,3</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">4</td>
-    <td width="180" style="text-align: left;">Bernal Navarrete</td>
-    <td width="180" style="text-align: left;">María José</td>
-    <td width="78">90</td>
-    <td width="76">9,0</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFC0CA">
-    <td width="34" height="17">5</td>
-    <td width="180" style="text-align: left;">Diaz de Leon Martinez</td>
-    <td width="180" style="text-align: left;">Carlos</td>
-    <td width="78">0</td>
-    <td width="76">0,0</td>
-    <td width="90">Sin participación</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">6</td>
-    <td width="180" style="text-align: left;">Dominguez Perez</td>
-    <td width="180" style="text-align: left;">Dulce Maria</td>
-    <td width="78">86</td>
-    <td width="76">8,6</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">7</td>
-    <td width="180" style="text-align: left;">Dueñas</td>
-    <td width="180" style="text-align: left;">Oscar Alejandro</td>
-    <td width="78">85</td>
-    <td width="76">8,5</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFC0CA">
-    <td width="34" height="17">8</td>
-    <td width="180" style="text-align: left;">Goycoochea</td>
-    <td width="180" style="text-align: left;">Héctor</td>
-    <td width="78">25</td>
-    <td width="76">2,5</td>
-    <td width="90">No Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">9</td>
-    <td width="180" style="text-align: left;">Marin Marin</td>
-    <td width="180" style="text-align: left;">Margarita Maria</td>
-    <td width="78">92</td>
-    <td width="76">9,2</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">10</td>
-    <td width="180" style="text-align: left;">Medina Barrios</td>
-    <td width="180" style="text-align: left;">Lucero Zamarith</td>
-    <td width="78">70</td>
-    <td width="76">7,0</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">11</td>
-    <td width="180" style="text-align: left;">Merino</td>
-    <td width="180" style="text-align: left;">Anahi</td>
-    <td width="78">78</td>
-    <td width="76">7,8</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFC0CA">
-    <td width="34" height="17">12</td>
-    <td width="180" style="text-align: left;">Monsalve</td>
-    <td width="180" style="text-align: left;">Diana Lucia</td>
-    <td width="78">40</td>
-    <td width="76">4,0</td>
-    <td width="90">No Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">13</td>
-    <td width="180" style="text-align: left;">Ordoñez Ochoa</td>
-    <td width="180" style="text-align: left;">Ana Maria</td>
-    <td width="78">89</td>
-    <td width="76">8,9</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">14</td>
-    <td width="180" style="text-align: left;">Perez Puerta Puerta</td>
-    <td width="180" style="text-align: left;">Natalia</td>
-    <td width="78">88</td>
-    <td width="76">8,8</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFC0CA">
-    <td width="34" height="17">15</td>
-    <td width="180" style="text-align: left;">Porcel Luna</td>
-    <td width="180" style="text-align: left;">Willard</td>
-    <td width="78">0</td>
-    <td width="76">0,0</td>
-    <td width="90">Sin participación</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">16</td>
-    <td width="180" style="text-align: left;">Sanchez Cordova</td>
-    <td width="180" style="text-align: left;">Juan Antonio</td>
-    <td width="78">83</td>
-    <td width="76">8,3</td>
-    <td width="90">Aprobado</td>
-</tr>
-<tr style="background-color: #FFFFFF">
-    <td width="34" height="17">17</td>
-    <td width="180" style="text-align: left;">Silvera</td>
-    <td width="180" style="text-align: left;">Oscar</td>
-    <td width="78">86</td>
-    <td width="76">8,6</td>
-    <td width="90">Aprobado</td>
-</tr>';
+        // Check if delete
+        if ((!empty($dev) && $dev === true) && (!empty($delete) && $delete === true)) {
+            $DB->execute("UPDATE {course_actas} SET information = NULL, sum10 = NULL, sum100 = NULL WHERE information IS NOT NULL");
+        }
 
-        foreach ($courses as $course) {
+        // Import data
+        if (!empty($import) && $import === true) {
 
-            // SQL get actas
-            $sql = "SELECT * FROM {course_actas} WHERE courseid = :courseid";
+            // Get raw body
+            $rawBody = file_get_contents('php://input');
 
-            // Get actas
-            $actas = $DB->get_records_sql($sql, ['courseid' => $course->id]);
+            // Decode JSON body
+            $bodyData = json_decode($rawBody, true);
 
-            // Iterate actas
-            foreach ($actas as $acta) {
+            // SQL get acta
+            $sql = "SELECT * FROM {course_actas} WHERE id = :id AND information IS NULL";
 
-                //$acta->data = base64_encode(serialize($html));
-                //$DB->update_record('course_actas', $acta);
+            // Get acta
+            $acta = $DB->get_record_sql($sql, ['id' => $bodyData['acta_id']]);
 
-                echo base64_decode($acta->data);
+            $insert = [];
 
+            // Check if acta exists
+            if (!empty($acta)) {
+
+                // Get details
+                $informations = $bodyData['details'];
+
+                $sum100 = 0.0;
+                $sum10 = 0;
+
+                // Iterate information
+                foreach ($informations as $information) {
+                    $insert[] = [
+                        'id' => $information['id'],
+                        'grade10' => $information['grade10'],
+                        'grade100' => $information['grade100'],
+                        'status' => $information['status'],
+                    ];
+
+                    // Sum
+                    $sum10 += (int)$information['grade10'];
+                    $sum100 += (float)$information['grade100'];
+                }
+
+                // Update acta
+                $acta->information = json_encode($insert);
+                $acta->sum10 = $sum10;
+                $acta->sum100 = $sum100;
+                $DB->update_record('course_actas', $acta);
+
+            }
+
+        } else {
+            // Iterate courses
+            foreach ($courses as $course) {
+
+                // SQL get actas
+                $sql = "SELECT * FROM {course_actas} WHERE courseid = :courseid AND information IS NULL";
+
+                // Get actas
+                $actas = $DB->get_records_sql($sql, ['courseid' => $course->id]);
+
+                // Iterate actas
+                foreach ($actas as $acta) {
+
+                    // Validate if information is null
+                    if ($acta->information === null) {
+
+                        // Get information
+                        $informations = local_uvirtual_parse_html_table(base64_decode($acta->data));
+
+                        $insert = [];
+                        $validate = true;
+
+                        // Iterate information
+                        foreach ($informations as $information) {
+
+                            // SQL to get user
+                            $sql = "SELECT id, lastname, firstname FROM {user} WHERE lastname LIKE :lastname AND deleted = 0";
+
+                            // Get user
+                            $users = $DB->get_records_sql($sql, ['lastname' => '%' . $information[1] . '%']);
+
+                            // Check if user exists
+                            switch (true) {
+                                case count($users) == 0:
+                                    $insert[] = [
+                                        'id' => '',
+                                        'lastname' => $information[1],
+                                        'firstname' => $information[2],
+                                        'grade10' => (int)$information[3],
+                                        'grade100' => $information[4],
+                                        'status' => $information[5],
+                                    ];
+                                    $validate = false;
+                                    break;
+                                case count($users) == 1:
+                                    // Get user
+                                    $users = array_shift($users);
+                                    $insert[] = [
+                                        'id' => (int)$users->id,
+                                        'grade10' => (int)$information[3],
+                                        'grade100' => $information[4],
+                                        'status' => $information[5],
+                                    ];
+                                    break;
+                                case count($users) > 1:
+                                    // Find user
+                                    $user_result = array_filter($users, function ($user) use ($information) {
+                                        return strpos($user->firstname, $information[2]) !== false;
+                                    });
+
+                                    // Check if user exists
+                                    if (!empty($user_result)) {
+                                        // Get user
+                                        $user_result = array_shift($user_result);
+                                        $insert[] = [
+                                            'id' => (int)$user_result->id,
+                                            'grade10' => (int)$information[3],
+                                            'grade100' => $information[4],
+                                            'status' => $information[5],
+                                        ];
+                                    } else {
+                                        $insert[] = [
+                                            'id' => '',
+                                            'lastname' => $information[1],
+                                            'firstname' => $information[2],
+                                            'grade10' => (int)$information[3],
+                                            'grade100' => $information[4],
+                                            'status' => $information[5],
+                                        ];
+                                        $validate = false;
+                                    }
+                                    break;
+                            }
+                        }
+
+                        // Export error
+                        if (!empty($export) && $export === true) {
+                            echo json_encode($acta->id);
+                            echo json_encode($insert);
+                        }
+
+                        // Check if validate
+                        if ($validate) {
+
+                            $sum10 = 0.0;
+                            $sum100 = 0;
+
+                            // Iterate final
+                            foreach ($insert as $key => $value) {
+                                $sum100 += $value['grade10'];
+                                $sum10 += (float)$value['grade100'];
+                            }
+
+                            // Update acta
+                            $acta->sum100 = $sum10;
+                            $acta->sum10 = $sum100;
+                            $acta->information = json_encode($insert);
+                            $DB->update_record('course_actas', $acta);
+
+                            $answers[] = [
+                                'course' => $course->id,
+                                'shortname' => $course->shortname,
+                                'acta_id' => $acta->id,
+                                'insert' => true,
+                            ];
+                        } else {
+                            $answers[] = [
+                                'course' => $course->id,
+                                'shortname' => $course->shortname,
+                                'acta_id' => $acta->id,
+                                'insert' => false,
+                            ];
+                        }
+                    }
+                }
             }
         }
 
