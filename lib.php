@@ -241,6 +241,31 @@ function local_uvirtual_identify_course_program($shortname)
     return json_encode($data);
 }
 
+/**
+ * @param $shortname
+ * @return mixed
+ * @throws Exception
+ */
+function local_uvirtual_verify_status_grade_migration($shortname)
+{
+    if (empty($shortname)) {
+        throw new Exception('Error en los parámetros enviados, contacte a soporte');
+    }
+
+    $urlConsult = "https://saedev.uvirtual.org/sisacadold/api/v1/clase/verifyStatusGradeMigration/$shortname";
+
+    $ch = curl_init($urlConsult);
+
+    curl_setopt($ch, CURLOPT_HTTPGET, true);
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $result = curl_exec($ch);
+
+    $data = json_decode($result, true);
+    return $data['status'] ?? false;
+}
+
 function local_uvirtual_change_role($email, $courses, $rolename, $newrolename)
 {
     global $DB, $CFG;
