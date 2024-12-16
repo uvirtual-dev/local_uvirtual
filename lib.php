@@ -264,7 +264,7 @@ function local_uvirtual_verify_status_grade_migration($shortname)
     $result = curl_exec($ch);
 
     $data = json_decode($result, true);
-    return $data['status'];
+    return $data['status'] ?? false;
 }
 
 function local_uvirtual_change_role($email, $courses, $rolename, $newrolename)
