@@ -132,7 +132,8 @@ class get_courses_basic_info extends external_api
         $sql = "SELECT id, fullname as name, shortname, startdate, enddate 
                          FROM {course} 
                         WHERE $timesql
-                              AND visible = 1";
+                              AND visible = 1
+                              ORDER BY enddate DESC";
 
         $courses = $DB->get_records_sql($sql);
 
@@ -164,6 +165,9 @@ class get_courses_basic_info extends external_api
 
             $courseprogram = json_decode(local_uvirtual_identify_course_program($courseinfo->shortname));
             $coursesinfo[$courseid]->programid = $courseprogram->idprograma;
+
+            $statusgrademigration = local_uvirtual_verify_status_grade_migration($courseinfo->shortname);
+            $coursesinfo[$courseid]->statusGradeMigration = $statusgrademigration;
 
             $studentsfields = 'u.id, u.firstname as firstName, u.lastname as lastName, u.email, ul.timeaccess as lastAccess, gg.finalgrade as grade';
             $studentsEnrollments = array_values(course_info::get_course_students($courseid, 0, $studentsfields, $roleidsstudents));
